@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: oracle-odds-api
+    runtime: docker
+    dockerfilePath: apps/api/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false # connection string de Neon, se pega a mano en el dashboard
+      - key: REDIS_URL
+        sync: false # connection string de Upstash (rediss://...)
+      - key: JWT_SECRET
+        generateValue: true # Render genera un secreto aleatorio seguro
+      - key: JWT_EXPIRES_IN
+        value: 1h
+      - key: CORS_ORIGIN
+        sync: false # URL de Vercel una vez desplegado el frontend

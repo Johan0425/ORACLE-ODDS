@@ -1,0 +1,31 @@
+{
+  "name": "@oracle-odds/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^15.0.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "gsap": "^3.12.5",
+    "framer-motion": "^11.11.17",
+    "lenis": "^1.1.16",
+    "zustand": "^5.0.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "@types/node": "^22.9.0",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.1",
+    "tailwindcss": "^3.4.14",
+    "postcss": "^8.4.47",
+    "autoprefixer": "^10.4.20"
+  }
+}

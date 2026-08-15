@@ -1,0 +1,38 @@
+{
+  "name": "@oracle-odds/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:prod": "node dist/main.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@nestjs/bullmq": "^10.2.3",
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/config": "^3.3.0",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/jwt": "^10.2.0",
+    "@nestjs/platform-express": "^10.4.15",
+    "@oracle-odds/probability-engine": "*",
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "bullmq": "^5.28.1",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "ioredis": "^5.4.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.4.9",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.9.0",
+    "prisma": "^5.22.0",
+    "typescript": "^5.6.3"
+  }
+}

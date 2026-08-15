@@ -1,0 +1,14 @@
+{
+  "name": "oracle-odds",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:services": "docker compose up -d",
+    "dev:services:down": "docker compose down",
+    "db:generate": "npm run prisma:generate -w apps/api",
+    "db:migrate": "npm run prisma:migrate -w apps/api"
+  }
+}
