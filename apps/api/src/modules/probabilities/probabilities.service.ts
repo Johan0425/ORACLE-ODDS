@@ -42,7 +42,12 @@ export class ProbabilitiesService {
     return {
       teamId,
       teamName,
-      recentMatches: stats.map((s) => ({ goalsFor: s.goalsFor ?? 0, goalsAgainst: s.goalsAgainst ?? 0 })),
+      recentMatches: stats.map((s) => ({
+        goalsFor: s.goalsFor ?? 0,
+        goalsAgainst: s.goalsAgainst ?? 0,
+        corners: s.corners ?? undefined,
+        cards: s.yellowCards != null || s.redCards != null ? (s.yellowCards ?? 0) + (s.redCards ?? 0) : undefined,
+      })),
     };
   }
 

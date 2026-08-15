@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import { SmoothScrollProvider } from '@/components/providers/smooth-scroll-provider';
+import { Navbar } from '@/components/layout/Navbar';
 import './globals.css';
 
 // Sustituto vía next/font/google de la tipografía display objetivo (Neue Machina /
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={`${spaceGrotesk.variable} ${inter.variable}`}>
       <body className="bg-background font-body text-foreground antialiased">
+        <Navbar />
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
       </body>
     </html>

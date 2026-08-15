@@ -102,6 +102,8 @@ export const MARKET_LABEL: Record<string, string> = {
   MONEYLINE_1X2: '1X2',
   OVER_UNDER_GOALS: 'Over/Under',
   ASIAN_HANDICAP: 'Hándicap asiático',
+  OVER_UNDER_CORNERS: 'Córners',
+  OVER_UNDER_CARDS: 'Tarjetas',
 };
 
 export const SELECTION_LABEL: Record<string, string> = {

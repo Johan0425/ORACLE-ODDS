@@ -1,5 +1,5 @@
 import { poissonCdf, poissonPmf } from '../models/poisson';
-import type { ExpectedGoals } from '../types';
+import type { ExpectedCount } from '../types';
 
 export interface OverUnderResult {
   line: number;
@@ -11,12 +11,11 @@ export interface OverUnderResult {
 
 /**
  * La suma de dos variables Poisson independientes es a su vez Poisson(lambda_home +
- * lambda_away), así que el total de goles del partido se modela directamente sobre
- * esa distribución combinada, sin necesitar la matriz conjunta completa.
+ * lambda_away), así que el total (goles, córners o tarjetas) se modela directamente
+ * sobre esa distribución combinada, sin necesitar la matriz conjunta completa. Sirve
+ * para cualquier mercado de "total" — no solo goles.
  */
-export function calculateOverUnder(expectedGoals: ExpectedGoals, line: number): OverUnderResult {
-  const lambdaTotal = expectedGoals.home + expectedGoals.away;
-
+export function calculateOverUnderFromTotal(lambdaTotal: number, line: number): OverUnderResult {
   if (Number.isInteger(line)) {
     const push = poissonPmf(line, lambdaTotal);
     const under = poissonCdf(line - 1, lambdaTotal);
@@ -25,4 +24,8 @@ export function calculateOverUnder(expectedGoals: ExpectedGoals, line: number): 
 
   const under = poissonCdf(Math.floor(line), lambdaTotal);
   return { line, over: 1 - under, under, push: 0 };
+}
+
+export function calculateOverUnder(expectedGoals: ExpectedCount, line: number): OverUnderResult {
+  return calculateOverUnderFromTotal(expectedGoals.home + expectedGoals.away, line);
 }

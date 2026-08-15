@@ -23,7 +23,12 @@ const MARKET_TITLES: Record<string, string> = {
   MONEYLINE_1X2: 'Resultado (1X2)',
   OVER_UNDER_GOALS: 'Total de goles (Over/Under)',
   ASIAN_HANDICAP: 'Hándicap asiático',
+  OVER_UNDER_CORNERS: 'Córners',
+  OVER_UNDER_CARDS: 'Tarjetas',
 };
+
+// Orden de lectura: resultado primero, luego los totales, córners/tarjetas al final.
+const MARKET_ORDER = ['MONEYLINE_1X2', 'OVER_UNDER_GOALS', 'ASIAN_HANDICAP', 'OVER_UNDER_CORNERS', 'OVER_UNDER_CARDS'];
 
 function groupByMarket(probabilities: ApiProbability[]): Map<string, ApiProbability[]> {
   const groups = new Map<string, ApiProbability[]>();
@@ -61,7 +66,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
   const marketGroups = groupByMarket(probabilities);
 
   return (
-    <main className="min-h-screen bg-background px-6 py-16">
+    <main className="min-h-screen bg-background px-6 pb-16 pt-28">
       <div className="mx-auto max-w-5xl">
         <Link href="/matches" className="text-xs uppercase tracking-widest text-white/40 hover:text-white/70">
           ← Partidos de hoy
@@ -103,9 +108,11 @@ export default async function MatchDetailPage({ params }: PageProps) {
         )}
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {[...marketGroups.entries()].map(([market, outcomes]) => (
-            <MarketBreakdown key={market} title={MARKET_TITLES[market] ?? market} outcomes={outcomes} />
-          ))}
+          {[...marketGroups.entries()]
+            .sort(([a], [b]) => MARKET_ORDER.indexOf(a) - MARKET_ORDER.indexOf(b))
+            .map(([market, outcomes]) => (
+              <MarketBreakdown key={market} title={MARKET_TITLES[market] ?? market} outcomes={outcomes} />
+            ))}
         </section>
 
         {marketGroups.size === 0 && (

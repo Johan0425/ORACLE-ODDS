@@ -59,7 +59,7 @@ export default async function MatchesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background px-6 py-16">
+    <main className="min-h-screen bg-background px-6 pb-16 pt-28">
       <div className="mx-auto max-w-6xl">
         <header className="mb-12">
           <p className="text-xs uppercase tracking-[0.4em] text-gold">Barrido diario</p>

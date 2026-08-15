@@ -24,17 +24,23 @@ export function explainMoneyline(
   );
 }
 
-export function explainOverUnder(
-  ctx: ExplainContext & {
-    selection: 'over' | 'under';
-    line: number;
-    probability: number;
-    h2hOverRate?: { overCount: number; totalMatches: number; line: number };
-  },
-): string {
+export interface OverUnderExplainContext {
+  homeTeamName: string;
+  awayTeamName: string;
+  selection: 'over' | 'under';
+  line: number;
+  probability: number;
+  /** "goles", "córners", "tarjetas" — el mercado se explica en estos términos, no solo el de goles. */
+  statLabel: string;
+  homeAvg: number;
+  awayAvg: number;
+  h2hOverRate?: { overCount: number; totalMatches: number; line: number };
+}
+
+export function explainOverUnder(ctx: OverUnderExplainContext): string {
   const parts = [
-    `${ctx.selection === 'over' ? 'Over' : 'Under'} ${ctx.line} goles: ${pct(ctx.probability)}%`,
-    `${ctx.homeTeamName} y ${ctx.awayTeamName} promedian ${ctx.homeAvgGoalsScored.toFixed(1)} y ${ctx.awayAvgGoalsScored.toFixed(1)} goles anotados en sus últimos partidos`,
+    `${ctx.selection === 'over' ? 'Over' : 'Under'} ${ctx.line} ${ctx.statLabel}: ${pct(ctx.probability)}%`,
+    `${ctx.homeTeamName} y ${ctx.awayTeamName} promedian ${ctx.homeAvg.toFixed(1)} y ${ctx.awayAvg.toFixed(1)} ${ctx.statLabel} en sus últimos partidos`,
   ];
 
   if (ctx.h2hOverRate) {
@@ -46,9 +52,15 @@ export function explainOverUnder(
   return parts.join(' — ');
 }
 
-export function explainHandicap(
-  ctx: ExplainContext & { selection: 'home' | 'away'; line: number; probability: number },
-): string {
+export interface HandicapExplainContext {
+  homeTeamName: string;
+  awayTeamName: string;
+  selection: 'home' | 'away';
+  line: number;
+  probability: number;
+}
+
+export function explainHandicap(ctx: HandicapExplainContext): string {
   const subject = ctx.selection === 'home' ? ctx.homeTeamName : ctx.awayTeamName;
   const displayLine = ctx.selection === 'home' ? ctx.line : -ctx.line;
 
