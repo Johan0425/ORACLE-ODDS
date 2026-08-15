@@ -7,7 +7,9 @@ services:
     plan: free
     envVars:
       - key: DATABASE_URL
-        sync: false # connection string de Neon, se pega a mano en el dashboard
+        sync: false # connection string POOLED de Neon (para la app)
+      - key: DATABASE_URL_UNPOOLED
+        sync: false # connection string DIRECTA de Neon (para `prisma migrate deploy`)
       - key: REDIS_URL
         sync: false # connection string de Upstash (rediss://...)
       - key: JWT_SECRET

@@ -8,3 +8,5 @@ dist/
 /apps/web/.next/
 /apps/api/dist/
 /packages/probability-engine/dist/
+.vercel
+.env*

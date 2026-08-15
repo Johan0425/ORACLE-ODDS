@@ -14,10 +14,17 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { SyncModule } from './modules/sync/sync.module';
 
+// El worker de BullMQ (`SyncModule`) asume un proceso persistente escuchando la
+// cola — no encaja en el modelo serverless de Vercel Functions (invocación
+// corta, sin instancia "siempre viva" garantizada). ENABLE_SYNC_WORKER=true en
+// un runtime de proceso largo (Docker/Colima local, o un futuro host con
+// contenedor) lo activa; en Vercel se deja desactivado.
+const syncWorkerEnabled = process.env.ENABLE_SYNC_WORKER === 'true';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    BullModule.forRoot({ connection: resolveRedisConnection() }),
+    ...(syncWorkerEnabled ? [BullModule.forRoot({ connection: resolveRedisConnection() })] : []),
     PrismaModule,
     SportsModule,
     LeaguesModule,
@@ -27,7 +34,7 @@ import { SyncModule } from './modules/sync/sync.module';
     ValueFinderModule,
     AuthModule,
     UsersModule,
-    SyncModule,
+    ...(syncWorkerEnabled ? [SyncModule] : []),
   ],
   controllers: [AppController],
 })

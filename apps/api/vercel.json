@@ -1,0 +1,4 @@
+{
+  "buildCommand": "cd ../.. && npm run build -w packages/probability-engine && npx prisma generate --schema=apps/api/prisma/schema.prisma && npm run build -w apps/api",
+  "rewrites": [{ "source": "/(.*)", "destination": "/api" }]
+}
