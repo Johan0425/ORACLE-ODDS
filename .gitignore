@@ -10,3 +10,4 @@ dist/
 /packages/probability-engine/dist/
 .vercel
 .env*
+*.tsbuildinfo
