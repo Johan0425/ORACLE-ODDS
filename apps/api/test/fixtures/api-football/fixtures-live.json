@@ -1,0 +1,62 @@
+{
+  "get": "fixtures",
+  "parameters": {
+    "live": "9001"
+  },
+  "errors": [],
+  "results": 1,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": [
+    {
+      "fixture": {
+        "id": 600003,
+        "date": "2026-10-14T11:30:00.000Z",
+        "timestamp": 1792263600,
+        "venue": {
+          "name": "Estadio Unión Delta",
+          "city": "Testville"
+        },
+        "status": {
+          "long": "First Half",
+          "short": "1H",
+          "elapsed": 31,
+          "extra": null
+        }
+      },
+      "league": {
+        "id": 9001,
+        "name": "Liga de Prueba",
+        "country": "Testland",
+        "logo": null,
+        "flag": null,
+        "season": 2026,
+        "round": "Regular Season - 31"
+      },
+      "teams": {
+        "home": {
+          "id": 104,
+          "name": "Unión Delta",
+          "logo": null
+        },
+        "away": {
+          "id": 105,
+          "name": "Real Épsilon",
+          "logo": null
+        }
+      },
+      "goals": {
+        "home": 1,
+        "away": 0
+      },
+      "score": {
+        "halftime": {
+          "home": null,
+          "away": null
+        }
+      }
+    }
+  ]
+}

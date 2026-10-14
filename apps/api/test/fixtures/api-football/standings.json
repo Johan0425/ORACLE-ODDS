@@ -1,0 +1,151 @@
+{
+  "get": "standings",
+  "parameters": {
+    "league": "9001",
+    "season": "2026"
+  },
+  "errors": [],
+  "results": 1,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": [
+    {
+      "league": {
+        "id": 9001,
+        "season": 2026,
+        "standings": [
+          [
+            {
+              "rank": 1,
+              "team": {
+                "id": 101,
+                "name": "Club Alfa",
+                "logo": null
+              },
+              "points": 60,
+              "group": "Liga de Prueba",
+              "form": "WDLWW",
+              "all": {
+                "played": 30,
+                "win": 18,
+                "draw": 6,
+                "lose": 6,
+                "goals": {
+                  "for": 50,
+                  "against": 25
+                }
+              }
+            },
+            {
+              "rank": 2,
+              "team": {
+                "id": 102,
+                "name": "Deportivo Beta",
+                "logo": null
+              },
+              "points": 53,
+              "group": "Liga de Prueba",
+              "form": "WDLWW",
+              "all": {
+                "played": 30,
+                "win": 16,
+                "draw": 6,
+                "lose": 8,
+                "goals": {
+                  "for": 45,
+                  "against": 29
+                }
+              }
+            },
+            {
+              "rank": 3,
+              "team": {
+                "id": 103,
+                "name": "Atlético Gamma",
+                "logo": null
+              },
+              "points": 46,
+              "group": "Liga de Prueba",
+              "form": "WDLWW",
+              "all": {
+                "played": 30,
+                "win": 14,
+                "draw": 6,
+                "lose": 10,
+                "goals": {
+                  "for": 40,
+                  "against": 33
+                }
+              }
+            },
+            {
+              "rank": 4,
+              "team": {
+                "id": 104,
+                "name": "Unión Delta",
+                "logo": null
+              },
+              "points": 39,
+              "group": "Liga de Prueba",
+              "form": "WDLWW",
+              "all": {
+                "played": 30,
+                "win": 12,
+                "draw": 6,
+                "lose": 12,
+                "goals": {
+                  "for": 35,
+                  "against": 37
+                }
+              }
+            },
+            {
+              "rank": 5,
+              "team": {
+                "id": 105,
+                "name": "Real Épsilon",
+                "logo": null
+              },
+              "points": 32,
+              "group": "Liga de Prueba",
+              "form": "WDLWW",
+              "all": {
+                "played": 30,
+                "win": 10,
+                "draw": 6,
+                "lose": 14,
+                "goals": {
+                  "for": 30,
+                  "against": 41
+                }
+              }
+            },
+            {
+              "rank": 6,
+              "team": {
+                "id": 106,
+                "name": "Sporting Zeta",
+                "logo": null
+              },
+              "points": 25,
+              "group": "Liga de Prueba",
+              "form": "WDLWW",
+              "all": {
+                "played": 30,
+                "win": 8,
+                "draw": 6,
+                "lose": 16,
+                "goals": {
+                  "for": 25,
+                  "against": 45
+                }
+              }
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

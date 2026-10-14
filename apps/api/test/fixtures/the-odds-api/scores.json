@@ -1,0 +1,21 @@
+[
+  {
+    "id": "ev_alfa_zeta",
+    "sport_key": "soccer_testland_liga",
+    "commence_time": "2026-10-16T19:00:00.000Z",
+    "completed": true,
+    "home_team": "Club Alfa FC",
+    "away_team": "Sporting Zeta",
+    "scores": [
+      {
+        "name": "Club Alfa FC",
+        "score": "2"
+      },
+      {
+        "name": "Sporting Zeta",
+        "score": "0"
+      }
+    ],
+    "last_update": "2026-10-14T11:59:00.000Z"
+  }
+]

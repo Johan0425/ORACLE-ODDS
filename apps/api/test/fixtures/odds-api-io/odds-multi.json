@@ -1,0 +1,60 @@
+[
+  {
+    "id": 9911,
+    "home": "Club Alfa",
+    "away": "Sporting Zeta",
+    "date": "2026-10-16T19:00:00.000Z",
+    "status": "pending",
+    "league": {
+      "name": "Liga de Prueba",
+      "slug": "testland-liga"
+    },
+    "bookmakers": {
+      "Casa Cuatro": [
+        {
+          "name": "ML",
+          "odds": [
+            {
+              "home": "1.64",
+              "draw": "3.95",
+              "away": "5.50"
+            }
+          ],
+          "updatedAt": "2026-10-14T11:50:00.000Z"
+        },
+        {
+          "name": "Spread",
+          "odds": [
+            {
+              "hdp": -0.5,
+              "home": "1.64",
+              "away": "2.30"
+            }
+          ],
+          "updatedAt": "2026-10-14T11:50:00.000Z"
+        },
+        {
+          "name": "Totals",
+          "odds": [
+            {
+              "max": 2.5,
+              "over": "1.97",
+              "under": "1.85"
+            }
+          ],
+          "updatedAt": "2026-10-14T11:50:00.000Z"
+        },
+        {
+          "name": "Both Teams To Score",
+          "odds": [
+            {
+              "yes": "1.80",
+              "no": "1.95"
+            }
+          ],
+          "updatedAt": "2026-10-14T11:50:00.000Z"
+        }
+      ]
+    }
+  }
+]

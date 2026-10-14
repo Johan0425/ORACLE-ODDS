@@ -1,0 +1,159 @@
+{
+  "get": "fixtures",
+  "parameters": {
+    "league": "9001",
+    "season": "2026"
+  },
+  "errors": [],
+  "results": 3,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": [
+    {
+      "fixture": {
+        "id": 600001,
+        "date": "2026-10-16T19:00:00.000Z",
+        "timestamp": 1792177200,
+        "venue": {
+          "name": "Estadio Club Alfa",
+          "city": "Testville"
+        },
+        "status": {
+          "long": "Not Started",
+          "short": "NS",
+          "elapsed": null,
+          "extra": null
+        }
+      },
+      "league": {
+        "id": 9001,
+        "name": "Liga de Prueba",
+        "country": "Testland",
+        "logo": null,
+        "flag": null,
+        "season": 2026,
+        "round": "Regular Season - 31"
+      },
+      "teams": {
+        "home": {
+          "id": 101,
+          "name": "Club Alfa",
+          "logo": null
+        },
+        "away": {
+          "id": 106,
+          "name": "Sporting Zeta",
+          "logo": null
+        }
+      },
+      "goals": {
+        "home": null,
+        "away": null
+      },
+      "score": {
+        "halftime": {
+          "home": null,
+          "away": null
+        }
+      }
+    },
+    {
+      "fixture": {
+        "id": 600002,
+        "date": "2026-10-16T21:00:00.000Z",
+        "timestamp": 1792184400,
+        "venue": {
+          "name": "Estadio Deportivo Beta",
+          "city": "Testville"
+        },
+        "status": {
+          "long": "Not Started",
+          "short": "NS",
+          "elapsed": null,
+          "extra": null
+        }
+      },
+      "league": {
+        "id": 9001,
+        "name": "Liga de Prueba",
+        "country": "Testland",
+        "logo": null,
+        "flag": null,
+        "season": 2026,
+        "round": "Regular Season - 31"
+      },
+      "teams": {
+        "home": {
+          "id": 102,
+          "name": "Deportivo Beta",
+          "logo": null
+        },
+        "away": {
+          "id": 103,
+          "name": "Atlético Gamma",
+          "logo": null
+        }
+      },
+      "goals": {
+        "home": null,
+        "away": null
+      },
+      "score": {
+        "halftime": {
+          "home": null,
+          "away": null
+        }
+      }
+    },
+    {
+      "fixture": {
+        "id": 600003,
+        "date": "2026-10-17T19:00:00.000Z",
+        "timestamp": 1792263600,
+        "venue": {
+          "name": "Estadio Unión Delta",
+          "city": "Testville"
+        },
+        "status": {
+          "long": "Not Started",
+          "short": "NS",
+          "elapsed": null,
+          "extra": null
+        }
+      },
+      "league": {
+        "id": 9001,
+        "name": "Liga de Prueba",
+        "country": "Testland",
+        "logo": null,
+        "flag": null,
+        "season": 2026,
+        "round": "Regular Season - 31"
+      },
+      "teams": {
+        "home": {
+          "id": 104,
+          "name": "Unión Delta",
+          "logo": null
+        },
+        "away": {
+          "id": 105,
+          "name": "Real Épsilon",
+          "logo": null
+        }
+      },
+      "goals": {
+        "home": null,
+        "away": null
+      },
+      "score": {
+        "halftime": {
+          "home": null,
+          "away": null
+        }
+      }
+    }
+  ]
+}

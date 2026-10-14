@@ -1,0 +1,236 @@
+{
+  "get": "fixtures/lineups",
+  "parameters": {
+    "fixture": "600001"
+  },
+  "errors": [],
+  "results": 2,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": [
+    {
+      "team": {
+        "id": 101,
+        "name": "x"
+      },
+      "coach": {
+        "id": 1,
+        "name": "Entrenador Ficticio"
+      },
+      "formation": "4-3-3",
+      "startXI": [
+        {
+          "player": {
+            "id": 10100,
+            "name": "Jugador 101-1",
+            "number": 1,
+            "pos": "G"
+          }
+        },
+        {
+          "player": {
+            "id": 10101,
+            "name": "Jugador 101-2",
+            "number": 2,
+            "pos": "D"
+          }
+        },
+        {
+          "player": {
+            "id": 10102,
+            "name": "Jugador 101-3",
+            "number": 3,
+            "pos": "D"
+          }
+        },
+        {
+          "player": {
+            "id": 10103,
+            "name": "Jugador 101-4",
+            "number": 4,
+            "pos": "D"
+          }
+        },
+        {
+          "player": {
+            "id": 10104,
+            "name": "Jugador 101-5",
+            "number": 5,
+            "pos": "D"
+          }
+        },
+        {
+          "player": {
+            "id": 10105,
+            "name": "Jugador 101-6",
+            "number": 6,
+            "pos": "M"
+          }
+        },
+        {
+          "player": {
+            "id": 10106,
+            "name": "Jugador 101-7",
+            "number": 7,
+            "pos": "M"
+          }
+        },
+        {
+          "player": {
+            "id": 10107,
+            "name": "Jugador 101-8",
+            "number": 8,
+            "pos": "M"
+          }
+        },
+        {
+          "player": {
+            "id": 10108,
+            "name": "Jugador 101-9",
+            "number": 9,
+            "pos": "F"
+          }
+        },
+        {
+          "player": {
+            "id": 10109,
+            "name": "Jugador 101-10",
+            "number": 10,
+            "pos": "F"
+          }
+        },
+        {
+          "player": {
+            "id": 10110,
+            "name": "Jugador 101-11",
+            "number": 11,
+            "pos": "F"
+          }
+        }
+      ],
+      "substitutes": [
+        {
+          "player": {
+            "id": 10120,
+            "name": "Suplente 101",
+            "number": 20,
+            "pos": "M"
+          }
+        }
+      ]
+    },
+    {
+      "team": {
+        "id": 106,
+        "name": "x"
+      },
+      "coach": {
+        "id": 1,
+        "name": "Entrenador Ficticio"
+      },
+      "formation": "4-3-3",
+      "startXI": [
+        {
+          "player": {
+            "id": 10600,
+            "name": "Jugador 106-1",
+            "number": 1,
+            "pos": "G"
+          }
+        },
+        {
+          "player": {
+            "id": 10601,
+            "name": "Jugador 106-2",
+            "number": 2,
+            "pos": "D"
+          }
+        },
+        {
+          "player": {
+            "id": 10602,
+            "name": "Jugador 106-3",
+            "number": 3,
+            "pos": "D"
+          }
+        },
+        {
+          "player": {
+            "id": 10603,
+            "name": "Jugador 106-4",
+            "number": 4,
+            "pos": "D"
+          }
+        },
+        {
+          "player": {
+            "id": 10604,
+            "name": "Jugador 106-5",
+            "number": 5,
+            "pos": "D"
+          }
+        },
+        {
+          "player": {
+            "id": 10605,
+            "name": "Jugador 106-6",
+            "number": 6,
+            "pos": "M"
+          }
+        },
+        {
+          "player": {
+            "id": 10606,
+            "name": "Jugador 106-7",
+            "number": 7,
+            "pos": "M"
+          }
+        },
+        {
+          "player": {
+            "id": 10607,
+            "name": "Jugador 106-8",
+            "number": 8,
+            "pos": "M"
+          }
+        },
+        {
+          "player": {
+            "id": 10608,
+            "name": "Jugador 106-9",
+            "number": 9,
+            "pos": "F"
+          }
+        },
+        {
+          "player": {
+            "id": 10609,
+            "name": "Jugador 106-10",
+            "number": 10,
+            "pos": "F"
+          }
+        },
+        {
+          "player": {
+            "id": 10610,
+            "name": "Jugador 106-11",
+            "number": 11,
+            "pos": "F"
+          }
+        }
+      ],
+      "substitutes": [
+        {
+          "player": {
+            "id": 10620,
+            "name": "Suplente 106",
+            "number": 20,
+            "pos": "M"
+          }
+        }
+      ]
+    }
+  ]
+}

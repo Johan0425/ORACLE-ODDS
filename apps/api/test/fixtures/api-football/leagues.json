@@ -1,0 +1,35 @@
+{
+  "get": "leagues",
+  "parameters": {
+    "id": "9001"
+  },
+  "errors": [],
+  "results": 1,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": [
+    {
+      "league": {
+        "id": 9001,
+        "name": "Liga de Prueba",
+        "type": "League",
+        "logo": null
+      },
+      "country": {
+        "name": "Testland",
+        "code": "TL",
+        "flag": null
+      },
+      "seasons": [
+        {
+          "year": 2026,
+          "start": "2026-02-01",
+          "end": "2026-12-15",
+          "current": true
+        }
+      ]
+    }
+  ]
+}

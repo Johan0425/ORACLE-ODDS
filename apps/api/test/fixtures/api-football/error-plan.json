@@ -1,0 +1,13 @@
+{
+  "get": "odds",
+  "parameters": {},
+  "errors": {
+    "plan": "Your plan does not include this endpoint"
+  },
+  "results": 0,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": []
+}

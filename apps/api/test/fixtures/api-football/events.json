@@ -1,0 +1,54 @@
+{
+  "get": "fixtures/events",
+  "parameters": {
+    "fixture": "600003"
+  },
+  "errors": [],
+  "results": 2,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": [
+    {
+      "time": {
+        "elapsed": 12,
+        "extra": null
+      },
+      "team": {
+        "id": 104,
+        "name": "Unión Delta"
+      },
+      "player": {
+        "id": 9,
+        "name": "J. Pruebas"
+      },
+      "assist": {
+        "id": 10,
+        "name": "M. Ejemplo"
+      },
+      "type": "Goal",
+      "detail": "Normal Goal"
+    },
+    {
+      "time": {
+        "elapsed": 27,
+        "extra": null
+      },
+      "team": {
+        "id": 105,
+        "name": "Real Épsilon"
+      },
+      "player": {
+        "id": 21,
+        "name": "L. Ficticio"
+      },
+      "assist": {
+        "id": null,
+        "name": null
+      },
+      "type": "Card",
+      "detail": "Yellow Card"
+    }
+  ]
+}

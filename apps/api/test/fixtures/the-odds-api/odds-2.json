@@ -1,0 +1,421 @@
+[
+  {
+    "id": "ev_alfa_zeta",
+    "sport_key": "soccer_testland_liga",
+    "sport_title": "Liga de Prueba",
+    "commence_time": "2026-10-16T19:00:00.000Z",
+    "home_team": "Club Alfa FC",
+    "away_team": "Sporting Zeta",
+    "bookmakers": [
+      {
+        "key": "casa_uno",
+        "title": "Casa Uno",
+        "last_update": "2026-10-14T11:59:00.000Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-10-14T11:59:00.000Z",
+            "outcomes": [
+              {
+                "name": "Club Alfa FC",
+                "price": 1.7000000000000002
+              },
+              {
+                "name": "Sporting Zeta",
+                "price": 5.6
+              },
+              {
+                "name": "Draw",
+                "price": 4
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-10-14T11:59:00.000Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.95,
+                "point": 2.5
+              },
+              {
+                "name": "Under",
+                "price": 1.88,
+                "point": 2.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-10-14T11:59:00.000Z",
+            "outcomes": [
+              {
+                "name": "Club Alfa FC",
+                "price": 1.7000000000000002,
+                "point": -0.5
+              },
+              {
+                "name": "Sporting Zeta",
+                "price": 2.35,
+                "point": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "casa_dos",
+        "title": "Casa Dos",
+        "last_update": "2026-10-14T11:59:00.000Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-10-14T11:59:00.000Z",
+            "outcomes": [
+              {
+                "name": "Club Alfa FC",
+                "price": 1.66
+              },
+              {
+                "name": "Sporting Zeta",
+                "price": 5.3
+              },
+              {
+                "name": "Draw",
+                "price": 3.9
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-10-14T11:59:00.000Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 2.02,
+                "point": 2.5
+              },
+              {
+                "name": "Under",
+                "price": 1.82,
+                "point": 2.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-10-14T11:59:00.000Z",
+            "outcomes": [
+              {
+                "name": "Club Alfa FC",
+                "price": 1.66,
+                "point": -0.5
+              },
+              {
+                "name": "Sporting Zeta",
+                "price": 2.28,
+                "point": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "casa_tres",
+        "title": "Casa Tres",
+        "last_update": "2026-10-14T11:59:00.000Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-10-14T11:59:00.000Z",
+            "outcomes": [
+              {
+                "name": "Club Alfa FC",
+                "price": 1.6
+              },
+              {
+                "name": "Sporting Zeta",
+                "price": 5.8
+              },
+              {
+                "name": "Draw",
+                "price": 4.1
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-10-14T11:59:00.000Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.98,
+                "point": 2.5
+              },
+              {
+                "name": "Under",
+                "price": 1.86,
+                "point": 2.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-10-14T11:59:00.000Z",
+            "outcomes": [
+              {
+                "name": "Club Alfa FC",
+                "price": 1.6,
+                "point": -0.5
+              },
+              {
+                "name": "Sporting Zeta",
+                "price": 2.4,
+                "point": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "casa_no_autorizada",
+        "title": "Casa No Autorizada",
+        "last_update": "2026-10-14T11:59:00.000Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-10-14T11:59:00.000Z",
+            "outcomes": [
+              {
+                "name": "Club Alfa FC",
+                "price": 2.5
+              },
+              {
+                "name": "Sporting Zeta",
+                "price": 7
+              },
+              {
+                "name": "Draw",
+                "price": 4.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-10-14T11:59:00.000Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 2.4,
+                "point": 2.5
+              },
+              {
+                "name": "Under",
+                "price": 2.1,
+                "point": 2.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-10-14T11:59:00.000Z",
+            "outcomes": [
+              {
+                "name": "Club Alfa FC",
+                "price": 2.5,
+                "point": -0.5
+              },
+              {
+                "name": "Sporting Zeta",
+                "price": 2.6,
+                "point": 0.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ev_beta_gamma",
+    "sport_key": "soccer_testland_liga",
+    "sport_title": "Liga de Prueba",
+    "commence_time": "2026-10-16T21:00:00.000Z",
+    "home_team": "Deportivo Beta",
+    "away_team": "Atletico Gamma",
+    "bookmakers": [
+      {
+        "key": "casa_uno",
+        "title": "Casa Uno",
+        "last_update": "2026-10-14T11:50:00.000Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-10-14T11:50:00.000Z",
+            "outcomes": [
+              {
+                "name": "Deportivo Beta",
+                "price": 2.3
+              },
+              {
+                "name": "Atletico Gamma",
+                "price": 3.2
+              },
+              {
+                "name": "Draw",
+                "price": 3.3
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-10-14T11:50:00.000Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 2.1,
+                "point": 2.5
+              },
+              {
+                "name": "Under",
+                "price": 1.75,
+                "point": 2.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-10-14T11:50:00.000Z",
+            "outcomes": [
+              {
+                "name": "Deportivo Beta",
+                "price": 2.3,
+                "point": -0.5
+              },
+              {
+                "name": "Atletico Gamma",
+                "price": 1.65,
+                "point": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "casa_dos",
+        "title": "Casa Dos",
+        "last_update": "2026-10-14T11:50:00.000Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-10-14T11:50:00.000Z",
+            "outcomes": [
+              {
+                "name": "Deportivo Beta",
+                "price": 2.25
+              },
+              {
+                "name": "Atletico Gamma",
+                "price": 3.25
+              },
+              {
+                "name": "Draw",
+                "price": 3.4
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-10-14T11:50:00.000Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 2.15,
+                "point": 2.5
+              },
+              {
+                "name": "Under",
+                "price": 1.72,
+                "point": 2.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-10-14T11:50:00.000Z",
+            "outcomes": [
+              {
+                "name": "Deportivo Beta",
+                "price": 2.25,
+                "point": -0.5
+              },
+              {
+                "name": "Atletico Gamma",
+                "price": 1.68,
+                "point": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "casa_tres",
+        "title": "Casa Tres",
+        "last_update": "2026-10-14T11:50:00.000Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-10-14T11:50:00.000Z",
+            "outcomes": [
+              {
+                "name": "Deportivo Beta",
+                "price": 2.2
+              },
+              {
+                "name": "Atletico Gamma",
+                "price": 3.3
+              },
+              {
+                "name": "Draw",
+                "price": 3.35
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-10-14T11:50:00.000Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 2.25,
+                "point": 2.5
+              },
+              {
+                "name": "Under",
+                "price": 2.3,
+                "point": 2.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-10-14T11:50:00.000Z",
+            "outcomes": [
+              {
+                "name": "Deportivo Beta",
+                "price": 2.2,
+                "point": -0.5
+              },
+              {
+                "name": "Atletico Gamma",
+                "price": 1.7,
+                "point": 0.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

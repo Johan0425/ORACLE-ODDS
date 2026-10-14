@@ -1,0 +1,30 @@
+{
+  "get": "injuries",
+  "parameters": {
+    "fixture": "600001"
+  },
+  "errors": [],
+  "results": 1,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": [
+    {
+      "player": {
+        "id": 777,
+        "name": "K. Lesionado",
+        "type": "Missing Fixture",
+        "reason": "Knee Injury"
+      },
+      "team": {
+        "id": 106,
+        "name": "Sporting Zeta"
+      },
+      "fixture": {
+        "id": 600001,
+        "date": "2026-10-16T19:00:00.000Z"
+      }
+    }
+  ]
+}
