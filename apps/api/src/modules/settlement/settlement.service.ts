@@ -112,11 +112,16 @@ export class SettlementService {
         where: { outcome: null, predictionRun: { fixtureId: f.id } },
         select: { id: true, marketKey: true, selectionKey: true, line: true },
       });
+      // Por lotes: un updateMany por resultado en lugar de una actualización por fila.
+      const byOutcome = new Map<SettlementResult, string[]>();
       for (const p of probs) {
         const outcome = settleSelection({ marketKey: p.marketKey, selectionKey: p.selectionKey, line: p.line }, result) as SettlementResult;
-        await this.prisma.calculatedProbability.update({ where: { id: p.id }, data: { outcome } });
-        probCount += 1;
+        byOutcome.set(outcome, [...(byOutcome.get(outcome) ?? []), p.id]);
       }
+      for (const [outcome, ids] of byOutcome) {
+        await this.prisma.calculatedProbability.updateMany({ where: { id: { in: ids } }, data: { outcome } });
+      }
+      probCount += probs.length;
       settlementsCounter.inc({ kind: 'probability', result: 'any' }, probs.length);
     }
     return { valueBets: vbCount, probabilities: probCount, fixtures: fixtures.length };
