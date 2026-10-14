@@ -1,13 +1,13 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   // Neon pone DATABASE_URL detrás de PgBouncer (pooled); las migraciones necesitan
-  // la conexión directa. Local/Colima no define DATABASE_URL_UNPOOLED, así que cae
-  // de vuelta a DATABASE_URL sin romper nada.
+  // la conexión directa. En local ambas apuntan al mismo Postgres.
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
@@ -31,8 +31,11 @@ enum FixtureStatus {
   FINISHED
   POSTPONED
   CANCELLED
+  SUSPENDED
+  ABANDONED
 }
 
+/// Enum legado: solo lo usan las tablas `legacy_*` conservadas de la versión anterior.
 enum Market {
   MONEYLINE_1X2
   MONEYLINE_2WAY
@@ -57,38 +60,115 @@ enum DataProvider {
   THE_ODDS_API
   THESPORTSDB
   SPORTS_GAME_ODDS
+  ODDS_API_IO
+}
+
+enum EntityType {
+  SPORT
+  COUNTRY
+  LEAGUE
+  SEASON
+  TEAM
+  PLAYER
+  FIXTURE
+  BOOKMAKER
+  MARKET
+  SELECTION
+}
+
+enum PredictionRunStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  SUPERSEDED
+  BACKTEST
+}
+
+enum ValueBetStatus {
+  ACTIVE
+  EXPIRED
+  WITHDRAWN
+  SETTLED
+}
+
+enum SettlementResult {
+  WIN
+  LOSS
+  PUSH
+  HALF_WIN
+  HALF_LOSS
+  VOID
+}
+
+enum ChallengeStatus {
+  OPEN
+  LOCKED
+  CLOSED
+  ARCHIVED
+}
+
+enum SyncRunStatus {
+  RUNNING
+  SUCCEEDED
+  FAILED
+  SKIPPED
 }
 
 // ─────────────────────────────────────────────
-// CATÁLOGO: deportes, ligas, equipos, jugadores
+// CATÁLOGO CANÓNICO
 // ─────────────────────────────────────────────
 
 model Sport {
   id           String   @id @default(cuid())
   key          SportKey @unique
   name         String
-  isIndividual Boolean  @default(false) // true en tenis/MMA: Team representa a un competidor individual
+  isIndividual Boolean  @default(false)
   iconUrl      String?
+  isActive     Boolean  @default(true)
 
-  leagues  League[]
-  teams    Team[]
-  fixtures Fixture[]
+  leagues            League[]
+  teams              Team[]
+  fixtures           Fixture[]
+  marketDefinitions  MarketDefinition[]
 
   @@map("sports")
 }
 
-model League {
-  id          String  @id @default(cuid())
-  sportId     String
-  sport       Sport   @relation(fields: [sportId], references: [id])
-  name        String
-  country     String?
-  season      String // p.ej. "2025/2026"
-  tier        Int? // 1 = primera división
-  logoUrl     String?
-  externalIds Json    @default("{}") // { apiFootball: "39", ... } — mapea IDs por proveedor para dedupe
+model Country {
+  id      String  @id @default(cuid())
+  /// ISO 3166-1 alfa-2 cuando existe; "WORLD" para competiciones internacionales.
+  code    String  @unique
+  name    String
+  flagUrl String?
 
+  leagues League[]
+
+  @@map("countries")
+}
+
+/// Competición canónica. `season` queda como etiqueta legada de la temporada vigente;
+/// las temporadas se normalizan en `Season`.
+model League {
+  id             String   @id @default(cuid())
+  sportId        String
+  sport          Sport    @relation(fields: [sportId], references: [id])
+  name           String
+  slug           String?  @unique
+  country        String?
+  countryId      String?
+  countryRef     Country? @relation(fields: [countryId], references: [id])
+  season         String
+  type           String? // "league" | "cup"
+  tier           Int?
+  logoUrl        String?
+  /// Rating relativo de fuerza de liga (1 = referencia). Solo se usa entre competiciones.
+  strengthRating Float?
+  isTracked      Boolean  @default(false)
+  externalIds    Json     @default("{}")
+
+  seasons     Season[]
   fixtures    Fixture[]
+  standings   Standing[]
   favoritedBy FavoriteLeague[]
 
   createdAt DateTime @default(now())
@@ -99,36 +179,61 @@ model League {
   @@map("leagues")
 }
 
-model Team {
-  id          String  @id @default(cuid())
-  sportId     String
-  sport       Sport   @relation(fields: [sportId], references: [id])
-  name        String
-  shortName   String?
-  country     String?
-  logoUrl     String?
-  externalIds Json    @default("{}")
+model Season {
+  id        String    @id @default(cuid())
+  leagueId  String
+  league    League    @relation(fields: [leagueId], references: [id])
+  label     String
+  year      Int?
+  startDate DateTime?
+  endDate   DateTime?
+  isCurrent Boolean   @default(false)
 
-  homeFixtures Fixture[]     @relation("HomeTeam")
-  awayFixtures Fixture[]     @relation("AwayTeam")
+  fixtures Fixture[]
+
+  @@unique([leagueId, label])
+  @@map("seasons")
+}
+
+model Team {
+  id             String  @id @default(cuid())
+  sportId        String
+  sport          Sport   @relation(fields: [sportId], references: [id])
+  name           String
+  /// Nombre normalizado (minúsculas, sin acentos ni sufijos FC/CF) — ayuda, nunca clave única.
+  normalizedName String?
+  slug           String? @unique
+  shortName      String?
+  country        String?
+  logoUrl        String?
+  venueName      String?
+  externalIds    Json    @default("{}")
+
+  homeFixtures Fixture[]        @relation("HomeTeam")
+  awayFixtures Fixture[]        @relation("AwayTeam")
   fixtureStats FixtureStat[]
   players      Player[]
   favoritedBy  FavoriteTeam[]
+  standings    Standing[]
+  lineups      FixtureLineup[]
+  injuries     Injury[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([sportId])
+  @@index([normalizedName])
   @@map("teams")
 }
 
 model Player {
-  id          String  @id @default(cuid())
-  teamId      String
-  team        Team    @relation(fields: [teamId], references: [id])
-  name        String
-  position    String?
-  externalIds Json    @default("{}")
+  id             String  @id @default(cuid())
+  teamId         String
+  team           Team    @relation(fields: [teamId], references: [id])
+  name           String
+  normalizedName String?
+  position       String?
+  externalIds    Json    @default("{}")
 
   injuries Injury[]
 
@@ -137,63 +242,93 @@ model Player {
 }
 
 model Injury {
-  id         String        @id @default(cuid())
-  playerId   String
-  player     Player        @relation(fields: [playerId], references: [id])
-  status     String // "out" | "doubtful" | "questionable"
-  reason     String?
-  reportedAt DateTime      @default(now())
-  source     DataProvider?
+  id          String        @id @default(cuid())
+  playerId    String
+  player      Player        @relation(fields: [playerId], references: [id])
+  teamId      String?
+  team        Team?         @relation(fields: [teamId], references: [id])
+  fixtureId   String?
+  fixture     Fixture?      @relation(fields: [fixtureId], references: [id])
+  status      String // "out" | "doubtful" | "questionable"
+  reason      String?
+  reportedAt  DateTime      @default(now())
+  source      DataProvider?
+  /// Clave idempotente del proveedor: `${provider}:${fixture}:${player}`.
+  externalKey String?       @unique
 
   @@index([playerId])
+  @@index([fixtureId])
   @@map("injuries")
 }
 
 // ─────────────────────────────────────────────
-// PARTIDOS + ESTADÍSTICAS
+// PARTIDOS
 // ─────────────────────────────────────────────
 
 model Fixture {
-  id         String        @id @default(cuid())
+  id         String  @id @default(cuid())
   sportId    String
-  sport      Sport         @relation(fields: [sportId], references: [id])
+  sport      Sport   @relation(fields: [sportId], references: [id])
   leagueId   String
-  league     League        @relation(fields: [leagueId], references: [id])
+  league     League  @relation(fields: [leagueId], references: [id])
+  seasonId   String?
+  season     Season? @relation(fields: [seasonId], references: [id])
   homeTeamId String
-  homeTeam   Team          @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  homeTeam   Team    @relation("HomeTeam", fields: [homeTeamId], references: [id])
   awayTeamId String
-  awayTeam   Team          @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  awayTeam   Team    @relation("AwayTeam", fields: [awayTeamId], references: [id])
 
-  kickoff DateTime
-  status  FixtureStatus @default(SCHEDULED)
-  venue   String?
-  round   String?
+  kickoff          DateTime
+  /// Primer horario conocido; difiere de `kickoff` si hubo reprogramación.
+  originalKickoff  DateTime?
+  kickoffChangedAt DateTime?
+  status           FixtureStatus @default(SCHEDULED)
+  /// Estado crudo del proveedor (1H, HT, 2H, ET, P, FT, AET, PEN, PST...).
+  statusDetail     String?
+  elapsedMinutes   Int?
+  period           String?
+  venue            String?
+  round            String?
+  slug             String?       @unique
 
-  homeScore Int?
-  awayScore Int?
+  homeScore         Int?
+  awayScore         Int?
+  htHomeScore       Int?
+  htAwayScore       Int?
+  lastScoreUpdateAt DateTime?
+  lineupsConfirmed  Boolean       @default(false)
 
-  externalIds Json @default("{}") // dedupe entre proveedores (mismo partido, distinto ID externo)
+  /// Proveedor que originó el registro. Null = dato legado sin procedencia verificable
+  /// (p. ej. seed de demo anterior): nunca se expone en la API pública.
+  primaryProvider DataProvider?
+  externalIds     Json          @default("{}")
 
-  stats         FixtureStat[]
-  oddsSnapshots OddsSnapshot[]
-  probabilities CalculatedProbability[]
-  viewedBy      MatchViewHistory[]
+  stats              FixtureStat[]
+  events             FixtureEvent[]
+  lineups            FixtureLineup[]
+  injuries           Injury[]
+  oddsSnapshots      OddsSnapshot[]
+  oddsQuotes         OddsQuote[]
+  predictionRuns     PredictionRun[]
+  valueBets          ValueBet[]
+  affiliateClicks    AffiliateClick[]
+  challengeFixtures  ChallengeFixture[]
+  viewedBy           MatchViewHistory[]
+  legacyOdds         LegacyOddsSnapshot[]
+  legacyProbabilities LegacyCalculatedProbability[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // El H2H se deriva por query (home=A,away=B) OR (home=B,away=A) sobre esta tabla;
-  // no se persiste una tabla H2H aparte para evitar datos derivados desincronizados.
   @@index([sportId, kickoff])
   @@index([leagueId])
   @@index([status])
   @@index([homeTeamId])
   @@index([awayTeamId])
+  @@index([primaryProvider, kickoff])
   @@map("fixtures")
 }
 
-// Estadísticas de un partido ya jugado, por equipo — insumo del probability-engine
-// para forma reciente, promedios de córners/goles/tarjetas y H2H.
 model FixtureStat {
   id        String  @id @default(cuid())
   fixtureId String
@@ -201,83 +336,607 @@ model FixtureStat {
   teamId    String
   team      Team    @relation(fields: [teamId], references: [id])
 
-  goalsFor     Int?
-  goalsAgainst Int?
-  corners      Int?
-  yellowCards  Int?
-  redCards     Int?
-  shotsOnGoal  Int?
-  possession   Float?
-  points       Int? // baloncesto / NFL
-  raw          Json   @default("{}") // stats crudas específicas del deporte/proveedor, sin normalizar
+  goalsFor      Int?
+  goalsAgainst  Int?
+  corners       Int?
+  yellowCards   Int?
+  redCards      Int?
+  shotsOnGoal   Int?
+  shotsTotal    Int?
+  possession    Float?
+  /// Solo si el proveedor lo suministra; nunca estimado.
+  expectedGoals Float?
+  points        Int?
+  raw           Json    @default("{}")
+  updatedAt     DateTime @default(now()) @updatedAt
 
   @@unique([fixtureId, teamId])
   @@index([teamId])
   @@map("fixture_stats")
 }
 
+model FixtureEvent {
+  id          String   @id @default(cuid())
+  fixtureId   String
+  fixture     Fixture  @relation(fields: [fixtureId], references: [id])
+  teamId      String?
+  minute      Int
+  extraMinute Int?
+  type        String // Goal | Card | subst | Var
+  detail      String?
+  playerName  String?
+  assistName  String?
+  /// Clave idempotente derivada del proveedor.
+  eventKey    String
+  createdAt   DateTime @default(now())
+
+  @@unique([fixtureId, eventKey])
+  @@index([fixtureId, minute])
+  @@map("fixture_events")
+}
+
+model FixtureLineup {
+  id          String    @id @default(cuid())
+  fixtureId   String
+  fixture     Fixture   @relation(fields: [fixtureId], references: [id])
+  teamId      String
+  team        Team      @relation(fields: [teamId], references: [id])
+  formation   String?
+  coach       String?
+  startXI     Json      @default("[]")
+  substitutes Json      @default("[]")
+  confirmedAt DateTime?
+  updatedAt   DateTime  @default(now()) @updatedAt
+
+  @@unique([fixtureId, teamId])
+  @@map("fixture_lineups")
+}
+
+model Standing {
+  id           String   @id @default(cuid())
+  leagueId     String
+  league       League   @relation(fields: [leagueId], references: [id])
+  season       String
+  teamId       String
+  team         Team     @relation(fields: [teamId], references: [id])
+  groupName    String   @default("")
+  rank         Int
+  points       Int
+  played       Int
+  won          Int
+  drawn        Int
+  lost         Int
+  goalsFor     Int
+  goalsAgainst Int
+  form         String?
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  @@unique([leagueId, season, groupName, teamId])
+  @@map("standings")
+}
+
 // ─────────────────────────────────────────────
-// CUOTAS DE MERCADO (snapshots históricos)
+// MAPEO DE PROVEEDORES
 // ─────────────────────────────────────────────
 
+/// Toda entidad externa se resuelve a un ID interno por esta tabla. Nunca se
+/// deduplica solo por nombre.
+model ProviderEntityMap {
+  id         String       @id @default(cuid())
+  provider   DataProvider
+  entityType EntityType
+  externalId String
+  internalId String
+  metadata   Json         @default("{}")
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@unique([provider, entityType, externalId])
+  @@index([entityType, internalId])
+  @@map("provider_entity_maps")
+}
+
+model Bookmaker {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  name         String
+  country      String?
+  logoUrl      String?
+  websiteUrl   String?
+  affiliateUrl String?
+  licenseLabel String?
+  /// Solo casas verificadas como autorizadas para el territorio objetivo se muestran.
+  isAuthorized Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  priority     Int      @default(100)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  oddsSnapshots   OddsSnapshot[]
+  oddsQuotes      OddsQuote[]
+  affiliateClicks AffiliateClick[]
+
+  @@map("bookmakers")
+}
+
+model MarketDefinition {
+  id                     String   @id @default(cuid())
+  canonicalKey           String
+  sportId                String
+  sport                  Sport    @relation(fields: [sportId], references: [id])
+  displayName            String
+  period                 String // FT | H1
+  outcomeType            String // THREE_WAY | TWO_WAY | MULTI
+  supportsLine           Boolean
+  settlementRulesVersion String
+  isPublished            Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@unique([canonicalKey, sportId])
+  @@map("market_definitions")
+}
+
+// ─────────────────────────────────────────────
+// CUOTAS
+// ─────────────────────────────────────────────
+
+/// Histórico inmutable de capturas. Una fila nueva solo si el precio cambió
+/// (idempotencia por `rawPayloadHash`), así se puede reconstruir apertura,
+/// movimiento y cierre.
 model OddsSnapshot {
-  id        String       @id @default(cuid())
-  fixtureId String
-  fixture   Fixture      @relation(fields: [fixtureId], references: [id])
-  provider  DataProvider
-  bookmaker String
-  market    Market
-  selection String // "home" | "away" | "draw" | "over" | "under" | "1" | "X" | "2"
-  line      Float? // línea de hándicap/over-under (ej. 2.5, -1.5)
+  id                     String       @id @default(cuid())
+  fixtureId              String
+  fixture                Fixture      @relation(fields: [fixtureId], references: [id])
+  bookmakerId            String
+  bookmaker              Bookmaker    @relation(fields: [bookmakerId], references: [id])
+  provider               DataProvider
+  marketKey              String
+  selectionKey           String
+  line                   Float?
+  lineKey                String       @default("")
+  priceDecimal           Float
+  impliedProbabilityRaw  Float
+  impliedProbabilityNoVig Float?
+  overround              Float?
+  isLive                 Boolean      @default(false)
+  isSuspended            Boolean      @default(false)
+  sourceTimestamp        DateTime
+  capturedAt             DateTime     @default(now())
+  directBetUrl           String?
+  rawPayloadHash         String
 
-  price              Float // cuota decimal
-  impliedProbability Float // 1 / price, normalizada por overround si aplica
+  valueBets ValueBet[]
 
-  capturedAt DateTime @default(now())
-
-  // Se guarda cada captura (no se sobreescribe) para poder comparar la línea
-  // de apertura vs. la de cierre y auditar el edge detectado en el tiempo.
-  @@index([fixtureId, market])
+  @@unique([fixtureId, bookmakerId, marketKey, selectionKey, lineKey, isLive, rawPayloadHash])
+  @@index([fixtureId, marketKey, lineKey])
   @@index([capturedAt])
   @@map("odds_snapshots")
 }
 
-// ─────────────────────────────────────────────
-// PROBABILIDADES CALCULADAS (el producto)
-// ─────────────────────────────────────────────
+/// Estado vigente por (partido, casa, mercado, selección, línea): apertura,
+/// precio actual y anterior. Lo mantiene el pipeline de cuotas.
+model OddsQuote {
+  id                String       @id @default(cuid())
+  fixtureId         String
+  fixture           Fixture      @relation(fields: [fixtureId], references: [id])
+  bookmakerId       String
+  bookmaker         Bookmaker    @relation(fields: [bookmakerId], references: [id])
+  provider          DataProvider
+  marketKey         String
+  selectionKey      String
+  line              Float?
+  lineKey           String       @default("")
+  openingPrice      Float
+  openingAt         DateTime
+  previousPrice     Float?
+  currentPrice      Float
+  currentSnapshotId String
+  impliedProbabilityNoVig Float?
+  overround         Float?
+  isLive            Boolean      @default(false)
+  isSuspended       Boolean      @default(false)
+  sourceTimestamp   DateTime
+  lastChangedAt     DateTime
+  lastSeenAt        DateTime
+  directBetUrl      String?
 
-model CalculatedProbability {
-  id        String  @id @default(cuid())
-  fixtureId String
-  fixture   Fixture @relation(fields: [fixtureId], references: [id])
-
-  market    Market
-  selection String // misma semántica que OddsSnapshot.selection
-  line      Float?
-
-  probability  Float // 0..1, salida del probability-engine
-  confidence   ConfidenceLevel
-  modelVersion String // versiona el modelo para poder comparar performance histórica entre versiones
-
-  explanation String // justificación en lenguaje natural
-  factors     Json // desglose estructurado: { recentForm: {...}, h2h: {...}, homeAdvantage: {...} }
-
-  marketImpliedProbability Float? // tomada de la mejor OddsSnapshot disponible al momento del cálculo
-  edge                     Float? // probability - marketImpliedProbability
-
-  computedAt DateTime @default(now())
-
-  @@unique([fixtureId, market, selection, line, modelVersion])
-  @@index([fixtureId])
-  @@index([market])
-  @@index([edge])
-  @@map("calculated_probabilities")
+  @@unique([fixtureId, bookmakerId, marketKey, selectionKey, lineKey, isLive])
+  @@index([fixtureId, marketKey])
+  @@map("odds_quotes")
 }
 
 // ─────────────────────────────────────────────
-// USUARIOS
+// PREDICCIONES Y VALOR
 // ─────────────────────────────────────────────
 
+model PredictionRun {
+  id              String              @id @default(cuid())
+  fixtureId       String
+  fixture         Fixture             @relation(fields: [fixtureId], references: [id])
+  modelVersion    String
+  dataCutoff      DateTime
+  generatedAt     DateTime            @default(now())
+  featureSnapshot Json
+  trainingWindow  Json
+  dataQuality     Float?
+  lambdaHome      Float?
+  lambdaAway      Float?
+  status          PredictionRunStatus @default(COMPLETED)
+  /// Hash de entradas: dos corridas con los mismos datos no generan duplicados.
+  inputHash       String
+
+  probabilities CalculatedProbability[]
+  valueBets     ValueBet[]
+
+  @@unique([fixtureId, modelVersion, inputHash])
+  @@index([fixtureId, generatedAt])
+  @@index([status, modelVersion])
+  @@map("prediction_runs")
+}
+
+model CalculatedProbability {
+  id                    String          @id @default(cuid())
+  predictionRunId       String
+  predictionRun         PredictionRun   @relation(fields: [predictionRunId], references: [id], onDelete: Cascade)
+  marketKey             String
+  selectionKey          String
+  line                  Float?
+  lineKey               String          @default("")
+  rawProbability        Float
+  calibratedProbability Float
+  isCalibrated          Boolean         @default(false)
+  confidence            Float
+  confidenceLevel       ConfidenceLevel
+  uncertaintyLower      Float
+  uncertaintyUpper      Float
+  fairOdds              Float
+  explanation           String
+  factors               Json
+  /// Resultado liquidado (para métricas fuera de muestra).
+  outcome               SettlementResult?
+
+  @@unique([predictionRunId, marketKey, selectionKey, lineKey])
+  @@index([marketKey])
+  @@map("calculated_probabilities")
+}
+
+model ValueBet {
+  id                    String            @id @default(cuid())
+  fixtureId             String
+  fixture               Fixture           @relation(fields: [fixtureId], references: [id])
+  predictionRunId       String
+  predictionRun         PredictionRun     @relation(fields: [predictionRunId], references: [id])
+  oddsSnapshotId        String
+  oddsSnapshot          OddsSnapshot      @relation(fields: [oddsSnapshotId], references: [id])
+  marketKey             String
+  selectionKey          String
+  line                  Float?
+  lineKey               String            @default("")
+  bookmakerSlug         String
+  price                 Float
+  probability           Float
+  marketProbability     Float
+  fairOdds              Float
+  edge                  Float
+  expectedValue         Float
+  confidence            Float
+  qualityScore          Float
+  freshnessScore        Float
+  penalties             Json              @default("[]")
+  recommendedStakeUnits Float
+  isLive                Boolean           @default(false)
+  status                ValueBetStatus    @default(ACTIVE)
+  detectedAt            DateTime          @default(now())
+  /// Última vez que la oportunidad siguió cumpliendo los umbrales con cuotas vigentes.
+  lastConfirmedAt       DateTime          @default(now())
+  withdrawnAt           DateTime?
+  withdrawReason        String?
+  expiresAt             DateTime
+  settledAt             DateTime?
+  result                SettlementResult?
+  profitLossUnits       Float?
+  closingPrice          Float?
+  closingLineValue      Float?
+
+  /// Una única oportunidad por selección y partido: precio y métricas de publicación son inmutables,
+  /// así el historial no se infla con recálculos ni se reescribe a posteriori.
+  @@unique([fixtureId, marketKey, selectionKey, lineKey, isLive])
+  @@index([status, qualityScore])
+  @@index([fixtureId])
+  @@index([detectedAt])
+  @@map("value_bets")
+}
+
+model CalibrationModel {
+  id           String   @id @default(cuid())
+  modelVersion String
+  sportKey     SportKey
+  marketKey    String
+  method       String
+  params       Json
+  sampleSize   Int
+  ece          Float?
+  trainedFrom  DateTime?
+  trainedTo    DateTime?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([modelVersion, sportKey, marketKey, isActive])
+  @@map("calibration_models")
+}
+
+model ModelMetricSnapshot {
+  id               String   @id @default(cuid())
+  modelVersion     String
+  sportKey         SportKey
+  leagueId         String   @default("")
+  marketKey        String   @default("")
+  oddsBucket       String   @default("")
+  /// "backtest" (walk-forward) | "live" (predicciones publicadas y liquidadas)
+  source           String
+  sampleSize       Int
+  brier            Float?
+  logLoss          Float?
+  ece              Float?
+  accuracy         Float?
+  bets             Int      @default(0)
+  roi              Float?
+  yieldPerBet      Float?
+  hitRate          Float?
+  maxDrawdown      Float?
+  avgClv           Float?
+  roiCiLower       Float?
+  roiCiUpper       Float?
+  calibrationCurve Json     @default("[]")
+  isPublishable    Boolean  @default(false)
+  computedAt       DateTime @default(now())
+
+  @@unique([modelVersion, sportKey, leagueId, marketKey, oddsBucket, source])
+  @@map("model_metric_snapshots")
+}
+
+// ─────────────────────────────────────────────
+// COMBINADAS, COMPARTIR Y RETOS
+// ─────────────────────────────────────────────
+
+model Combination {
+  id                  String   @id @default(cuid())
+  publicCode          String   @unique
+  legs                Json
+  combinedOdds        Float
+  naiveProbability    Float?
+  adjustedProbability Float?
+  correlationPenalty  Float    @default(0)
+  expectedValue       Float?
+  riskLevel           String
+  systemType          String?
+  createdAt           DateTime @default(now())
+  expiresAt           DateTime
+
+  @@map("combinations")
+}
+
+model ShareAsset {
+  id         String   @id @default(cuid())
+  entityType String // value_bet | combination | fixture | challenge
+  entityId   String
+  template   String
+  format     String // square | story | landscape | whatsapp | telegram
+  storageUrl String?
+  publicCode String   @unique
+  payload    Json     @default("{}")
+  showSponsor Boolean @default(false)
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  @@index([entityType, entityId])
+  @@map("share_assets")
+}
+
+model AnonymousChallenge {
+  id                String          @id @default(cuid())
+  publicCode        String          @unique
+  creatorSecretHash String
+  title             String
+  description       String?
+  scoringRules      Json
+  startsAt          DateTime
+  endsAt            DateTime
+  status            ChallengeStatus @default(OPEN)
+  maxParticipants   Int             @default(100)
+  maxPicksPerEntry  Int             @default(20)
+  sponsorConfig     Json?
+  reportCount       Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  fixtures  ChallengeFixture[]
+  entries   ChallengeEntry[]
+  auditLogs ChallengeAuditLog[]
+
+  @@index([status, endsAt])
+  @@map("anonymous_challenges")
+}
+
+model ChallengeFixture {
+  challengeId String
+  challenge   AnonymousChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  fixtureId   String
+  fixture     Fixture            @relation(fields: [fixtureId], references: [id])
+
+  @@id([challengeId, fixtureId])
+  @@map("challenge_fixtures")
+}
+
+model ChallengeEntry {
+  id                 String             @id @default(cuid())
+  challengeId        String
+  challenge          AnonymousChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  anonymousAlias     String
+  anonymousTokenHash String             @unique
+  selections         Json               @default("[]")
+  score              Float              @default(0)
+  tiebreaker         Float              @default(0)
+  isHidden           Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@unique([challengeId, anonymousAlias])
+  @@index([challengeId, score])
+  @@map("challenge_entries")
+}
+
+model ChallengeAuditLog {
+  id          String             @id @default(cuid())
+  challengeId String
+  challenge   AnonymousChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  action      String
+  actor       String // creator | participant:<alias> | system
+  details     Json               @default("{}")
+  createdAt   DateTime           @default(now())
+
+  @@index([challengeId, createdAt])
+  @@map("challenge_audit_logs")
+}
+
+// ─────────────────────────────────────────────
+// AFILIACIÓN
+// ─────────────────────────────────────────────
+
+model AffiliateClick {
+  id                   String     @id @default(cuid())
+  clickId              String     @unique
+  bookmakerId          String
+  bookmaker            Bookmaker  @relation(fields: [bookmakerId], references: [id])
+  fixtureId            String?
+  fixture              Fixture?   @relation(fields: [fixtureId], references: [id])
+  valueBetId           String?
+  placement            String
+  subId                String?
+  campaign             String?
+  /// Hash diario rotado (sin IP en claro). Ver docs/affiliate-compliance.md.
+  anonymousSessionHash String?
+  referrer             String?
+  utmSource            String?
+  utmMedium            String?
+  utmCampaign          String?
+  clickedAt            DateTime   @default(now())
+
+  @@index([bookmakerId, clickedAt])
+  @@index([placement, clickedAt])
+  @@map("affiliate_clicks")
+}
+
+/// Impresiones agregadas por día (sin datos personales) para calcular CTR.
+model AffiliateImpressionDaily {
+  id            String   @id @default(cuid())
+  date          DateTime @db.Date
+  placement     String
+  bookmakerSlug String
+  count         Int      @default(0)
+
+  @@unique([date, placement, bookmakerSlug])
+  @@map("affiliate_impressions_daily")
+}
+
+/// Solo conversiones recibidas por postback oficial del operador. Nunca simuladas.
+model AffiliateConversion {
+  id          String   @id @default(cuid())
+  clickId     String
+  bookmakerId String
+  eventType   String
+  payoutCents Int?
+  currency    String?
+  externalRef String   @unique
+  receivedAt  DateTime @default(now())
+
+  @@index([clickId])
+  @@map("affiliate_conversions")
+}
+
+// ─────────────────────────────────────────────
+// OPERACIÓN Y OBSERVABILIDAD
+// ─────────────────────────────────────────────
+
+model ProviderSyncState {
+  id                  String       @id @default(cuid())
+  provider            DataProvider
+  jobName             String
+  lastRunAt           DateTime?
+  lastSuccessfulSync  DateTime?
+  lastError           String?
+  lastErrorAt         DateTime?
+  consecutiveFailures Int          @default(0)
+  lastDurationMs      Int?
+  itemsProcessed      Int          @default(0)
+  updatedAt           DateTime     @updatedAt
+
+  @@unique([provider, jobName])
+  @@map("provider_sync_states")
+}
+
+model SyncRunLog {
+  id                String        @id @default(cuid())
+  jobName           String
+  provider          DataProvider?
+  correlationId     String
+  status            SyncRunStatus
+  startedAt         DateTime      @default(now())
+  finishedAt        DateTime?
+  itemsFetched      Int           @default(0)
+  itemsCreated      Int           @default(0)
+  itemsUpdated      Int           @default(0)
+  duplicatesSkipped Int           @default(0)
+  errorMessage      String?
+
+  @@index([jobName, startedAt])
+  @@map("sync_run_logs")
+}
+
+model AdminAuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  /// Huella del secreto usado (primeros caracteres de su hash), nunca el secreto.
+  actorHash String
+  details   Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("admin_audit_logs")
+}
+
+model ProviderQuotaUsage {
+  id           String       @id @default(cuid())
+  provider     DataProvider
+  date         DateTime     @db.Date
+  requestsUsed Int          @default(0)
+  requestLimit Int
+  /// Restante informado por el propio proveedor (cabeceras), si lo expone.
+  reportedRemaining Int?
+
+  @@unique([provider, date])
+  @@map("provider_quota_usage")
+}
+
+model NewsletterSubscription {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  confirmToken String    @unique
+  confirmedAt  DateTime?
+  consentText  String
+  createdAt    DateTime  @default(now())
+  unsubscribedAt DateTime?
+
+  @@map("newsletter_subscriptions")
+}
+
+// ─────────────────────────────────────────────
+// LEGADO (conservado sin uso en el producto público)
+// ─────────────────────────────────────────────
+
+/// Cuentas de la versión anterior. El producto actual es anónimo; se conservan
+/// los datos pero no hay endpoints que las usen.
 model User {
   id           String  @id @default(cuid())
   email        String  @unique
@@ -332,19 +991,43 @@ model MatchViewHistory {
   @@map("match_view_history")
 }
 
-// ─────────────────────────────────────────────
-// CONTROL DE CONSUMO DE APIS FREE-TIER
-// ─────────────────────────────────────────────
+model LegacyOddsSnapshot {
+  id                 String       @id @default(cuid())
+  fixtureId          String
+  fixture            Fixture      @relation(fields: [fixtureId], references: [id])
+  provider           DataProvider
+  bookmaker          String
+  market             Market
+  selection          String
+  line               Float?
+  price              Float
+  impliedProbability Float
+  capturedAt         DateTime     @default(now())
 
-// Contador diario por proveedor; el módulo `sync` lo consulta antes de cada
-// llamada externa para no exceder los límites gratuitos (ver arquitectura, punto 1).
-model ProviderQuotaUsage {
-  id           String       @id @default(cuid())
-  provider     DataProvider
-  date         DateTime     @db.Date
-  requestsUsed Int          @default(0)
-  requestLimit Int
+  @@index([fixtureId, market], map: "legacy_odds_snapshots_fixtureId_market_idx")
+  @@index([capturedAt], map: "legacy_odds_snapshots_capturedAt_idx")
+  @@map("legacy_odds_snapshots")
+}
 
-  @@unique([provider, date])
-  @@map("provider_quota_usage")
+model LegacyCalculatedProbability {
+  id                       String          @id @default(cuid())
+  fixtureId                String
+  fixture                  Fixture         @relation(fields: [fixtureId], references: [id])
+  market                   Market
+  selection                String
+  line                     Float?
+  probability              Float
+  confidence               ConfidenceLevel
+  modelVersion             String
+  explanation              String
+  factors                  Json
+  marketImpliedProbability Float?
+  edge                     Float?
+  computedAt               DateTime        @default(now())
+
+  @@unique([fixtureId, market, selection, line, modelVersion], map: "legacy_calculated_probabilities_unique")
+  @@index([fixtureId], map: "legacy_calculated_probabilities_fixtureId_idx")
+  @@index([market], map: "legacy_calculated_probabilities_market_idx")
+  @@index([edge], map: "legacy_calculated_probabilities_edge_idx")
+  @@map("legacy_calculated_probabilities")
 }
