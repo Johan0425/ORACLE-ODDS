@@ -16,5 +16,12 @@ module.exports = {
       globalSetup: '<rootDir>/test/integration/global-setup.js',
       setupFiles: ['<rootDir>/test/integration/env.js'],
     },
+    {
+      ...base,
+      displayName: 'e2e-seed',
+      testMatch: ['<rootDir>/test/e2e/**/*.e2e.ts'],
+      globalSetup: '<rootDir>/test/integration/global-setup.js',
+      setupFiles: ['<rootDir>/test/integration/env.js'],
+    },
   ],
 };

@@ -20,7 +20,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:validate": "prisma validate",
-    "db:seed": "node prisma/seed.js"
+    "db:seed": "node prisma/seed.js",
+    "e2e:seed": "jest --selectProjects e2e-seed --runInBand"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
