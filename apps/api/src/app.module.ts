@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { AppThrottlerGuard } from './common/throttler.guard';
+import { env } from './config/env';
 import { CoreModule } from './modules/core/core.module';
 import { FixturesController } from './modules/fixtures/fixtures.controller';
 import { CatalogController } from './modules/catalog/catalog.controller';
@@ -19,7 +21,7 @@ import { NewsletterController } from './modules/newsletter/newsletter.controller
  * (src/worker.ts) para no depender de BullMQ dentro de funciones serverless.
  */
 @Module({
-  imports: [CoreModule, ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 120 }])],
+  imports: [CoreModule, ThrottlerModule.forRootAsync({ useFactory: () => [{ name: 'default', ttl: 60_000, limit: env().THROTTLE_GLOBAL_LIMIT }] })],
   controllers: [
     HealthController,
     DataStatusController,
@@ -33,6 +35,6 @@ import { NewsletterController } from './modules/newsletter/newsletter.controller
     AdminController,
     NewsletterController,
   ],
-  providers: [AdminGuard, { provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [AdminGuard, { provide: APP_GUARD, useClass: AppThrottlerGuard }],
 })
 export class AppModule {}

@@ -60,6 +60,9 @@ export const envSchema = z
     PUBLIC_WEB_URL: optionalUrl,
     TRUST_PROXY: bool(true),
     METRICS_TOKEN: optionalString,
+    /** Token compartido con el frontend (SSR): sus llamadas servidor→API no consumen el rate limit por IP. */
+    INTERNAL_API_TOKEN: optionalString,
+    THROTTLE_GLOBAL_LIMIT: num(120),
     SENTRY_DSN: optionalString,
 
     ENABLE_SYNC_WORKER: bool(false),

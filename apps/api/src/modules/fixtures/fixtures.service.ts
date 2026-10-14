@@ -276,7 +276,9 @@ export class FixturesService {
         };
       });
       const visible = rows.filter((r) => (opts.includeStale || !r.isStale) && !r.isSuspended);
-      const selections = [...new Set(rows.map((r) => r.selectionKey))].map((sel) => {
+      const canonical = def && def.selections !== 'SCORES' ? (def.selections as readonly string[]) : [];
+      const order = (k: string) => (canonical.includes(k) ? canonical.indexOf(k) : 99);
+      const selections = [...new Set(rows.map((r) => r.selectionKey))].sort((a, b) => order(a) - order(b) || a.localeCompare(b)).map((sel) => {
         const quotesFor = visible.filter((r) => r.selectionKey === sel).sort((a, b) => b.price - a.price);
         const avg = quotesFor.length ? quotesFor.reduce((s, r) => s + r.price, 0) / quotesFor.length : null;
         return {
