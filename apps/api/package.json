@@ -10,7 +10,6 @@
     "start:worker": "node dist/worker.js",
     "dev:worker": "nest start --watch --entryFile worker",
     "job": "node dist/scripts/run-job.js",
-    "job:dev": "ts-node --transpile-only src/scripts/run-job.ts",
     "data:purge-unverified": "node dist/scripts/purge-unverified.js",
     "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
     "typecheck": "tsc --noEmit -p tsconfig.json",
