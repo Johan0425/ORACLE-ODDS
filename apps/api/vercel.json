@@ -1,4 +1,8 @@
 {
-  "buildCommand": "cd ../.. && npm run build -w packages/probability-engine && npx prisma generate --schema=apps/api/prisma/schema.prisma && npm run build -w apps/api",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd ../.. && npm ci",
+  "buildCommand": "cd ../.. && npm run build -w packages/probability-engine && npx prisma generate --schema=apps/api/prisma/schema.prisma && npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma && npm run build -w apps/api",
+  "functions": { "api/index.ts": { "maxDuration": 300 } },
+  "crons": [{ "path": "/api/v1/cron/daily", "schedule": "0 9 * * *" }],
   "rewrites": [{ "source": "/(.*)", "destination": "/api" }]
 }

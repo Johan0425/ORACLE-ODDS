@@ -1,0 +1,32 @@
+# Disparador de jobs frecuentes cuando la API corre en Vercel (plan Hobby: Vercel Cron
+# solo admite una ejecución diaria, que cubre el grupo "daily"). Requiere los secretos
+# del repositorio ORACLE_API_URL (p. ej. https://<api>.vercel.app) y CRON_SECRET.
+# Con un worker persistente (Render) este workflow no es necesario: desactívalo.
+name: Scheduled sync
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      group:
+        description: 'Grupo de jobs (daily, odds, live, social)'
+        required: true
+        default: odds
+
+permissions: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    if: ${{ vars.ENABLE_SCHEDULED_SYNC == 'true' || github.event_name == 'workflow_dispatch' }}
+    strategy:
+      matrix:
+        group: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', inputs.group)) || fromJSON('["odds","live"]') }}
+    steps:
+      - name: Ejecutar grupo ${{ matrix.group }}
+        env:
+          API: ${{ secrets.ORACLE_API_URL }}
+          TOKEN: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl --fail-with-body -sS -m 310 -H "Authorization: Bearer $TOKEN" "$API/api/v1/cron/${{ matrix.group }}"

@@ -66,6 +66,12 @@ export const envSchema = z
     SENTRY_DSN: optionalString,
 
     ENABLE_SYNC_WORKER: bool(false),
+    /** bullmq = encolar para el worker persistente; inline = ejecutar en el mismo proceso (Vercel Functions + cron). */
+    QUEUE_MODE: z.enum(['bullmq', 'inline']).default('bullmq'),
+    /** Secreto que Vercel Cron envía como `Authorization: Bearer <CRON_SECRET>`. */
+    CRON_SECRET: optionalString,
+    /** Presupuesto de tiempo (ms) por invocación de cron en modo inline. */
+    CRON_TIME_BUDGET_MS: num(240_000),
     SYNC_ADMIN_SECRET: optionalString,
     /** Sal para hashes de sesión anónima; se rota cada día combinándola con la fecha. */
     ANON_HASH_SALT: optionalString,

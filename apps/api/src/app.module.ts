@@ -15,6 +15,7 @@ import { AdminController } from './modules/admin/admin.controller';
 import { AdminGuard } from './modules/admin/admin.guard';
 import { DataStatusController, HealthController } from './modules/health/health.controller';
 import { NewsletterController } from './modules/newsletter/newsletter.controller';
+import { CronController } from './modules/cron/cron.controller';
 
 /**
  * Proceso HTTP. No consume colas: el worker corre en un proceso aparte
@@ -34,6 +35,7 @@ import { NewsletterController } from './modules/newsletter/newsletter.controller
     AffiliateController,
     AdminController,
     NewsletterController,
+    CronController,
   ],
   providers: [AdminGuard, { provide: APP_GUARD, useClass: AppThrottlerGuard }],
 })
