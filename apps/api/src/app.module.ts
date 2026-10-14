@@ -1,41 +1,38 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { BullModule } from '@nestjs/bullmq';
-import { AppController } from './app.controller';
-import { resolveRedisConnection } from './common/redis-connection';
-import { PrismaModule } from './prisma/prisma.module';
-import { SportsModule } from './modules/sports/sports.module';
-import { LeaguesModule } from './modules/leagues/leagues.module';
-import { TeamsModule } from './modules/teams/teams.module';
-import { FixturesModule } from './modules/fixtures/fixtures.module';
-import { ProbabilitiesModule } from './modules/probabilities/probabilities.module';
-import { ValueFinderModule } from './modules/value-finder/value-finder.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { UsersModule } from './modules/users/users.module';
-import { SyncModule } from './modules/sync/sync.module';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { CoreModule } from './modules/core/core.module';
+import { FixturesController } from './modules/fixtures/fixtures.controller';
+import { CatalogController } from './modules/catalog/catalog.controller';
+import { ValueBetsController } from './modules/value-bets/value-bets.controller';
+import { CombinationsController } from './modules/combinations/combinations.controller';
+import { ShareController } from './modules/share/share.controller';
+import { ChallengesController } from './modules/challenges/challenges.controller';
+import { AffiliateController } from './modules/affiliate/affiliate.controller';
+import { AdminController } from './modules/admin/admin.controller';
+import { AdminGuard } from './modules/admin/admin.guard';
+import { DataStatusController, HealthController } from './modules/health/health.controller';
+import { NewsletterController } from './modules/newsletter/newsletter.controller';
 
-// El worker de BullMQ (`SyncModule`) asume un proceso persistente escuchando la
-// cola — no encaja en el modelo serverless de Vercel Functions (invocación
-// corta, sin instancia "siempre viva" garantizada). ENABLE_SYNC_WORKER=true en
-// un runtime de proceso largo (Docker/Colima local, o un futuro host con
-// contenedor) lo activa; en Vercel se deja desactivado.
-const syncWorkerEnabled = process.env.ENABLE_SYNC_WORKER === 'true';
-
+/**
+ * Proceso HTTP. No consume colas: el worker corre en un proceso aparte
+ * (src/worker.ts) para no depender de BullMQ dentro de funciones serverless.
+ */
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    ...(syncWorkerEnabled ? [BullModule.forRoot({ connection: resolveRedisConnection() })] : []),
-    PrismaModule,
-    SportsModule,
-    LeaguesModule,
-    TeamsModule,
-    FixturesModule,
-    ProbabilitiesModule,
-    ValueFinderModule,
-    AuthModule,
-    UsersModule,
-    ...(syncWorkerEnabled ? [SyncModule] : []),
+  imports: [CoreModule, ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 120 }])],
+  controllers: [
+    HealthController,
+    DataStatusController,
+    CatalogController,
+    FixturesController,
+    ValueBetsController,
+    CombinationsController,
+    ShareController,
+    ChallengesController,
+    AffiliateController,
+    AdminController,
+    NewsletterController,
   ],
-  controllers: [AppController],
+  providers: [AdminGuard, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}
