@@ -8,7 +8,22 @@
   "scripts": {
     "dev:services": "docker compose up -d",
     "dev:services:down": "docker compose down",
+    "dev:api": "npm run start:dev -w apps/api",
+    "dev:worker": "npm run dev:worker -w apps/api",
+    "dev:web": "npm run dev -w apps/web",
+    "build": "npm run build -w packages/probability-engine && npm run prisma:generate -w apps/api && npm run build -w apps/api && npm run build -w apps/web",
+    "lint": "npm run lint -w apps/api && npm run lint -w apps/web",
+    "typecheck": "npm run typecheck -w packages/probability-engine && npm run typecheck -w apps/api && npm run typecheck -w apps/web",
+    "test": "npm run test -w packages/probability-engine && npm run test -w apps/api",
+    "test:integration": "npm run test:integration -w apps/api",
+    "test:e2e": "npm run test:e2e -w apps/web",
     "db:generate": "npm run prisma:generate -w apps/api",
-    "db:migrate": "npm run prisma:migrate -w apps/api"
+    "db:migrate": "npm run prisma:migrate -w apps/api",
+    "db:deploy": "npm run prisma:deploy -w apps/api",
+    "db:seed": "npm run db:seed -w apps/api",
+    "job": "npm run job -w apps/api --"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

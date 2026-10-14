@@ -1,20 +1,59 @@
+# Render Blueprint: API HTTP + worker persistente desde la misma imagen.
+# Postgres: Neon (DATABASE_URL pooled + DATABASE_URL_UNPOOLED directa).
+# Redis: Upstash (REDIS_URL rediss://...). Frontend: Vercel (apps/web).
+envVarGroups:
+  - name: oracle-odds-shared
+    envVars:
+      - { key: NODE_ENV, value: production }
+      - { key: DATABASE_URL, sync: false }
+      - { key: DATABASE_URL_UNPOOLED, sync: false }
+      - { key: REDIS_URL, sync: false }
+      - { key: DEFAULT_TIMEZONE, value: America/Bogota }
+      - { key: DEFAULT_LOCALE, value: es-CO }
+      - { key: DEFAULT_REGION, value: co }
+      - { key: API_FOOTBALL_KEY, sync: false }
+      - { key: TRACKED_LEAGUES, sync: false }
+      - { key: THE_ODDS_API_KEY, sync: false }
+      - { key: ODDS_SPORT_KEYS, sync: false }
+      - { key: ODDS_REGIONS, value: 'eu,uk' }
+      - { key: ALLOWED_BOOKMAKERS, sync: false }
+      - { key: ODDS_API_IO_KEY, sync: false }
+      - { key: ENABLE_ODDS_API_IO, value: 'false' }
+      - { key: THESPORTSDB_KEY, sync: false }
+      - { key: SYNC_ADMIN_SECRET, generateValue: true }
+      - { key: ANON_HASH_SALT, generateValue: true }
+      - { key: INTERNAL_API_TOKEN, sync: false }
+      - { key: BET_SANTANDER_ENABLED, value: 'false' }
+      - { key: BET_SANTANDER_URL, value: 'https://www.betsantander.com/' }
+      - { key: BET_SANTANDER_AFFILIATE_ID, sync: false }
+      - { key: BET_SANTANDER_CAMPAIGN, sync: false }
+      - { key: BET_SANTANDER_LOGO_URL, sync: false }
+      - { key: BET_SANTANDER_VERIFIED_AT, sync: false }
+      - { key: SENTRY_DSN, sync: false }
+
 services:
   - type: web
     name: oracle-odds-api
     runtime: docker
     dockerfilePath: apps/api/Dockerfile
     dockerContext: .
-    plan: free
+    plan: starter
+    healthCheckPath: /ready
     envVars:
-      - key: DATABASE_URL
-        sync: false # connection string POOLED de Neon (para la app)
-      - key: DATABASE_URL_UNPOOLED
-        sync: false # connection string DIRECTA de Neon (para `prisma migrate deploy`)
-      - key: REDIS_URL
-        sync: false # connection string de Upstash (rediss://...)
-      - key: JWT_SECRET
-        generateValue: true # Render genera un secreto aleatorio seguro
-      - key: JWT_EXPIRES_IN
-        value: 1h
-      - key: CORS_ORIGIN
-        sync: false # URL de Vercel una vez desplegado el frontend
+      - fromGroup: oracle-odds-shared
+      - { key: PROCESS_ROLE, value: api }
+      - { key: ENABLE_SYNC_WORKER, value: 'false' }
+      - { key: CORS_ORIGIN, sync: false }
+      - { key: PUBLIC_WEB_URL, sync: false }
+      - { key: METRICS_TOKEN, generateValue: true }
+
+  - type: worker
+    name: oracle-odds-worker
+    runtime: docker
+    dockerfilePath: apps/api/Dockerfile
+    dockerContext: .
+    plan: starter
+    envVars:
+      - fromGroup: oracle-odds-shared
+      - { key: PROCESS_ROLE, value: worker }
+      - { key: ENABLE_SYNC_WORKER, value: 'true' }

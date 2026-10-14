@@ -15,6 +15,7 @@ import {
   type SettledBet,
 } from '@oracle-odds/probability-engine';
 import { PrismaService } from '../../prisma/prisma.service';
+import { bettingPerformance, modelQuality } from '../../common/metrics';
 import { APP_ENV } from '../../config/config.module';
 import type { AppEnv } from '../../config/env';
 import { PredictionsService } from '../predictions/predictions.service';
@@ -270,6 +271,16 @@ export class ModelMetricsService {
     extra?: Record<string, unknown>;
   }) {
     const { extra, ...rest } = s;
+    if (!s.leagueId && !s.oddsBucket) {
+      for (const [metric, value] of [['brier', s.brier], ['log_loss', s.logLoss], ['ece', s.ece]] as const) {
+        if (value != null && s.marketKey) modelQuality.set({ market: s.marketKey, source: s.source, metric }, value);
+      }
+      if (s.source === 'live' && !s.marketKey) {
+        for (const [metric, value] of [['roi', s.roi], ['clv', s.avgClv], ['max_drawdown', s.maxDrawdown], ['bets', s.bets]] as const) {
+          if (value != null) bettingPerformance.set({ metric }, value);
+        }
+      }
+    }
     const key = { modelVersion: s.modelVersion, sportKey: s.sportKey, leagueId: s.leagueId ?? '', marketKey: s.marketKey ?? '', oddsBucket: s.oddsBucket ?? '', source: s.source };
     const curve = extra ? ({ bins: s.calibrationCurve, ...extra } as Prisma.InputJsonValue) : s.calibrationCurve;
     const data = { ...rest, ...key, calibrationCurve: curve, computedAt: new Date() };

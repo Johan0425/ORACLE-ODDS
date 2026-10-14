@@ -4,6 +4,10 @@ node_modules
 **/.next
 .git
 *.log
-.env
-.env.local
+**/.env
+**/.env.*
+!**/.env.example
 apps/web
+apps/api/test
+**/test-results
+**/playwright-report

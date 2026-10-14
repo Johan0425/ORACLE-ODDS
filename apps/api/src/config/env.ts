@@ -167,7 +167,7 @@ export const envSchema = z
       if (!env.SYNC_ADMIN_SECRET || env.SYNC_ADMIN_SECRET.length < 24) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['SYNC_ADMIN_SECRET'], message: 'obligatorio en producción (≥ 24 caracteres)' });
       }
-      if (env.CORS_ORIGIN.length === 0) {
+      if (env.PROCESS_ROLE !== 'worker' && env.CORS_ORIGIN.length === 0) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['CORS_ORIGIN'], message: 'obligatorio en producción (allowlist explícita)' });
       }
       if (!env.ANON_HASH_SALT || env.ANON_HASH_SALT.length < 16) {

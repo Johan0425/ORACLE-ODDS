@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: 22
+  TEST_DATABASE_URL: postgresql://oracle:oracle@localhost:5432/oracle_odds_test?schema=public
+  E2E_DATABASE_URL: postgresql://oracle:oracle@localhost:5432/oracle_odds_e2e?schema=public
+
+jobs:
+  quality:
+    name: Lint, typecheck, unit tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: ${{ env.NODE_VERSION }}, cache: npm }
+      - run: npm ci
+      - name: Build engine and Prisma client
+        run: npm run build -w packages/probability-engine && npm run prisma:generate -w apps/api
+      - name: Prisma validate
+        run: npx prisma validate --schema=apps/api/prisma/schema.prisma
+        env: { DATABASE_URL: 'postgresql://x:x@localhost:5432/x', DATABASE_URL_UNPOOLED: 'postgresql://x:x@localhost:5432/x' }
+      - run: npm run lint
+      - run: npm run typecheck
+      - name: Unit tests (engine + API)
+        run: npm test
+      - name: Build API and web
+        run: npm run build -w apps/api && npm run build -w apps/web
+        env: { NEXT_PUBLIC_API_URL: 'http://localhost:3201/api/v1', NEXT_PUBLIC_SITE_URL: 'http://localhost:3200' }
+
+  integration:
+    name: Integration tests and migration check
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_USER: oracle, POSTGRES_PASSWORD: oracle, POSTGRES_DB: oracle_odds_test }
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U oracle" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: ${{ env.NODE_VERSION }}, cache: npm }
+      - run: npm ci
+      - run: npm run build -w packages/probability-engine && npm run prisma:generate -w apps/api
+      - name: Migration check (migrations reproduce the schema exactly)
+        working-directory: apps/api
+        env: { DATABASE_URL: '${{ env.TEST_DATABASE_URL }}', DATABASE_URL_UNPOOLED: '${{ env.TEST_DATABASE_URL }}' }
+        run: |
+          npx prisma migrate deploy
+          npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
+      - name: Integration tests (recorded provider responses)
+        run: npm run test:integration
+
+  e2e:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    needs: quality
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_USER: oracle, POSTGRES_PASSWORD: oracle, POSTGRES_DB: oracle_odds_e2e }
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U oracle" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: ${{ env.NODE_VERSION }}, cache: npm }
+      - run: npm ci
+      - run: npm run build -w packages/probability-engine && npm run prisma:generate -w apps/api && npm run build -w apps/api
+      - run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - run: npm run test:e2e
+        env: { CI: 'true' }
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: playwright-report, path: apps/web/playwright-report, retention-days: 7 }
+
+  security:
+    name: Secret scanning and dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
+      - uses: actions/setup-node@v4
+        with: { node-version: ${{ env.NODE_VERSION }}, cache: npm }
+      - run: npm ci --ignore-scripts
+      - name: Block critical vulnerabilities in production dependencies
+        run: npm audit --omit=dev --audit-level=critical
+      - name: Full audit report (informative)
+        run: npm audit --omit=dev || true
+
+  docker:
+    name: Docker build (API + worker image)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          tags: oracle-odds-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

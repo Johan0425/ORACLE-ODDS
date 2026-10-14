@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fixtures de prueba y valores de ejemplo sin secretos reales"
+paths = ['''apps/api/test/.*''', '''apps/web/e2e/.*''', '''apps/web/playwright\.config\.ts''', '''.*\.env\.example''']

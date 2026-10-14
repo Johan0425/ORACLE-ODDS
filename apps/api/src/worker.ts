@@ -22,10 +22,24 @@ async function bootstrap() {
   const port = Number(process.env.WORKER_HEALTH_PORT ?? 0);
   if (port > 0) {
     const http = await import('node:http');
-    http.createServer((req, res) => {
-      res.writeHead(req.url === '/health' ? 200 : 404, { 'content-type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', role: 'worker' }));
-    }).listen(port);
+    const { metricsRegistry } = await import('./common/metrics');
+    const { safeEqual } = await import('./common/hashing');
+    http
+      .createServer(async (req, res) => {
+        if (req.url === '/metrics') {
+          // Mismo control que la API: si hay METRICS_TOKEN se exige Bearer.
+          if (config.METRICS_TOKEN && !safeEqual(String(req.headers.authorization ?? ''), `Bearer ${config.METRICS_TOKEN}`)) {
+            res.writeHead(401).end();
+            return;
+          }
+          res.writeHead(200, { 'content-type': metricsRegistry.contentType });
+          res.end(await metricsRegistry.metrics());
+          return;
+        }
+        res.writeHead(req.url === '/health' ? 200 : 404, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok', role: 'worker' }));
+      })
+      .listen(port);
   }
   appLogger.log('Worker en ejecución', 'Bootstrap');
 }

@@ -11,3 +11,6 @@ dist/
 .vercel
 .env*
 *.tsbuildinfo
+!.env.example
+!**/.env.example
+!**/.env.local.example

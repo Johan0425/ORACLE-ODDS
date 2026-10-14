@@ -1,0 +1,40 @@
+# Reglas de alerta para Prometheus/Grafana Alerting. Métricas expuestas en GET /metrics (API).
+groups:
+  - name: oracle-odds
+    rules:
+      - alert: OddsDataStale
+        expr: sum(increase(oracle_job_runs_total{job="sync:prematch-odds",status="succeeded"}[2h])) == 0
+        for: 15m
+        labels: { severity: warning }
+        annotations: { summary: 'Sin sincronizaciones exitosas de cuotas prepartido en 2 h' }
+      - alert: WorkerStopped
+        expr: sum(increase(oracle_job_runs_total[30m])) == 0
+        for: 10m
+        labels: { severity: critical }
+        annotations: { summary: 'El worker no ha ejecutado ningún job en 30 minutos' }
+      - alert: ProviderFailures
+        expr: sum by (provider) (increase(oracle_provider_requests_total{outcome!="success"}[15m])) > 10
+        labels: { severity: warning }
+        annotations: { summary: 'Errores repetidos del proveedor {{ $labels.provider }}' }
+      - alert: CircuitOpen
+        expr: max by (provider) (oracle_provider_circuit_open) == 1
+        for: 5m
+        labels: { severity: warning }
+        annotations: { summary: 'Circuit breaker abierto para {{ $labels.provider }}' }
+      - alert: QuotaNearLimit
+        expr: min by (provider) (oracle_provider_quota_remaining) < 20
+        labels: { severity: warning }
+        annotations: { summary: 'Cupo de {{ $labels.provider }} cerca del límite' }
+      - alert: CoverageDrop
+        expr: increase(oracle_entities_normalized_total{entity="odds"}[6h]) == 0 and on() increase(oracle_job_runs_total{job="sync:prematch-odds",status="succeeded"}[6h]) > 0
+        labels: { severity: warning }
+        annotations: { summary: 'Los jobs de cuotas corren pero no llegan cuotas nuevas (caída de cobertura)' }
+      - alert: JobsFailing
+        expr: sum by (job) (increase(oracle_job_runs_total{status="failed"}[1h])) > 3
+        labels: { severity: warning }
+        annotations: { summary: 'El job {{ $labels.job }} falla repetidamente' }
+      - alert: ApiErrors
+        expr: sum(rate(oracle_http_request_duration_seconds_count{status=~"5.."}[5m])) > 0.5
+        for: 5m
+        labels: { severity: critical }
+        annotations: { summary: 'La API devuelve errores 5xx' }

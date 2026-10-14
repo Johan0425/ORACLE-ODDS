@@ -89,3 +89,17 @@ export const httpRequests = new Histogram({
   buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5],
   registers: [metricsRegistry],
 });
+
+export const modelQuality = new Gauge({
+  name: 'oracle_model_quality',
+  help: 'Calidad del modelo por mercado y fuente (brier, log_loss, ece)',
+  labelNames: ['market', 'source', 'metric'] as const,
+  registers: [metricsRegistry],
+});
+
+export const bettingPerformance = new Gauge({
+  name: 'oracle_betting_performance',
+  help: 'Rendimiento de oportunidades liquidadas (roi, clv, max_drawdown, bets)',
+  labelNames: ['metric'] as const,
+  registers: [metricsRegistry],
+});
