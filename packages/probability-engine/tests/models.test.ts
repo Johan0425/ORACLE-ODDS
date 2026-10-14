@@ -149,3 +149,16 @@ describe('fuerzas de equipo', () => {
     expect(league.sampleSize).toBe(0);
   });
 });
+
+describe('actualización en vivo', () => {
+  it('al final del partido la probabilidad converge al marcador', async () => {
+    const { inPlayProbabilities } = await import('../src');
+    const end = inPlayProbabilities({ lambdaHome: 1.5, lambdaAway: 1.1, elapsedMinutes: 90, homeScore: 2, awayScore: 1 });
+    expect(end.oneXTwo.HOME).toBeCloseTo(1, 6);
+    expect(end.overUnder.find((o) => o.line === 2.5)!.OVER).toBeCloseTo(1, 6);
+    const start = inPlayProbabilities({ lambdaHome: 1.5, lambdaAway: 1.1, elapsedMinutes: 0, homeScore: 0, awayScore: 0 });
+    expect(start.oneXTwo.HOME + start.oneXTwo.DRAW + start.oneXTwo.AWAY).toBeCloseTo(1, 8);
+    const leading = inPlayProbabilities({ lambdaHome: 1.5, lambdaAway: 1.1, elapsedMinutes: 60, homeScore: 1, awayScore: 0 });
+    expect(leading.oneXTwo.HOME).toBeGreaterThan(start.oneXTwo.HOME);
+  });
+});

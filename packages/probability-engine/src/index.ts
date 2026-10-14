@@ -14,6 +14,7 @@ export * from './odds/arbitrage';
 export * from './models/poisson';
 export * from './models/dixon-coles';
 export * from './models/elo';
+export * from './models/in-play';
 export * from './models/team-strength';
 export * from './calibration/calibration';
 export * from './evaluation/metrics';
