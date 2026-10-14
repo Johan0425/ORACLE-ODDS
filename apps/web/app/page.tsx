@@ -11,6 +11,7 @@ import { ValueBetCard } from '@/components/odds/ValueBetCard';
 import { LiveMatchCard } from '@/components/match/LiveMatchCard';
 import { MatchRow } from '@/components/match/MatchRow';
 import { DataUnavailable, EmptyState } from '@/components/ui/EmptyState';
+import { IS_DEMO } from '@/components/compliance/DemoBanner';
 
 export const revalidate = 30;
 
@@ -36,7 +37,7 @@ export default async function HomePage() {
         <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-gold/10 blur-3xl" />
         <p className="eyebrow">Inteligencia de cuotas</p>
         <h1 className="mt-3 max-w-3xl font-display text-4xl font-bold leading-tight sm:text-5xl">
-          Compara cuotas reales y descubre dónde el precio no refleja la probabilidad.
+          {IS_DEMO ? 'Compara cuotas y descubre' : 'Compara cuotas reales y descubre'} dónde el precio no refleja la probabilidad.
         </h1>
         <p className="mt-4 max-w-2xl text-muted">{COMPLIANCE.disclaimer} No recibimos apuestas ni custodiamos dinero.</p>
         <div className="mt-6 flex flex-wrap items-center gap-3">

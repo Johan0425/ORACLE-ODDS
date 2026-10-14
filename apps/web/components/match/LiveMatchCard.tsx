@@ -13,15 +13,15 @@ export function LiveMatchCard({ f }: { f: LiveFixture }) {
         {f.status === 'SUSPENDED' ? <span className="text-warning">Suspendido</span> : <LiveDot />}
       </header>
       <Link href={`/matches/${f.id}`} className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-        <span className="flex items-center gap-2">
+        <span className="flex min-w-0 items-center gap-2">
           <TeamLogo name={f.homeTeam.name} src={f.homeTeam.logoUrl} />
-          <span className="truncate font-semibold">{f.homeTeam.name}</span>
+          <span className="min-w-0 truncate font-semibold">{f.homeTeam.name}</span>
         </span>
-        <span className="tabular rounded-lg bg-surface-2 px-3 py-1 font-display text-2xl font-bold">
+        <span className="tabular whitespace-nowrap rounded-lg bg-surface-2 px-3 py-1 font-display text-2xl font-bold">
           {f.homeScore ?? '–'} : {f.awayScore ?? '–'}
         </span>
-        <span className="flex items-center justify-end gap-2">
-          <span className="truncate text-right font-semibold">{f.awayTeam.name}</span>
+        <span className="flex min-w-0 items-center justify-end gap-2">
+          <span className="min-w-0 truncate text-right font-semibold">{f.awayTeam.name}</span>
           <TeamLogo name={f.awayTeam.name} src={f.awayTeam.logoUrl} />
         </span>
       </Link>
