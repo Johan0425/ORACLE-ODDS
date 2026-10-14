@@ -5,6 +5,7 @@ import { APP_ENV } from '../../config/config.module';
 import type { AppEnv } from '../../config/env';
 import { safeEqual } from '../../common/hashing';
 import { SyncJobsService, type JobName } from '../sync/sync-jobs.service';
+import { DemoService } from '../demo/demo.service';
 
 /**
  * Grupos de jobs para entornos sin worker persistente (Vercel Functions). Cada
@@ -37,7 +38,7 @@ export const CRON_GROUPS: Record<string, JobName[]> = {
 @SkipThrottle()
 @Controller('cron')
 export class CronController {
-  constructor(private readonly jobs: SyncJobsService, @Inject(APP_ENV) private readonly env: AppEnv) {}
+  constructor(private readonly jobs: SyncJobsService, private readonly demo: DemoService, @Inject(APP_ENV) private readonly env: AppEnv) {}
 
   @Get(':group')
   async run(@Param('group') group: string, @Headers('authorization') auth: string | undefined) {
@@ -46,8 +47,18 @@ export class CronController {
     const jobs = CRON_GROUPS[group];
     if (!jobs) throw new NotFoundException(`Grupo desconocido: ${group}`);
     const started = Date.now();
-    const results: Array<{ job: JobName; status: string; reason?: string; ms: number }> = [];
+    const results: Array<{ job: JobName | 'demo:advance'; status: string; reason?: string; ms: number }> = [];
     const pending: JobName[] = [];
+    if (this.env.DEMO_MODE && (group === 'daily' || group === 'odds')) {
+      // Demo: avanza partidos ficticios y refresca sus cuotas antes de recalcular.
+      const t = Date.now();
+      try {
+        const r = await this.demo.run('advance', 90_000);
+        results.push({ job: 'demo:advance', status: 'SUCCEEDED', reason: JSON.stringify(r.details).slice(0, 200), ms: Date.now() - t });
+      } catch (e) {
+        results.push({ job: 'demo:advance', status: 'FAILED', reason: (e as Error).message.slice(0, 200), ms: Date.now() - t });
+      }
+    }
     for (const job of jobs) {
       if (Date.now() - started > this.env.CRON_TIME_BUDGET_MS) {
         pending.push(job);

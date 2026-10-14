@@ -6,6 +6,7 @@ import { TeamLogo } from '../ui/TeamLogo';
 import { ProbabilityGauge } from './ProbabilityGauge';
 import { AddToSlipButton } from './AddToSlipButton';
 import { ShareButton } from '../share/ShareButton';
+import { IS_DEMO } from '../compliance/DemoBanner';
 
 /** Oportunidad de valor con todos los datos exigidos para decidir con información completa. */
 export function ValueBetCard({ vb }: { vb: ValueBet }) {
@@ -104,7 +105,7 @@ export function ValueBetCard({ vb }: { vb: ValueBet }) {
           leg={{ fixtureId: f.id, marketKey: vb.marketKey, selectionKey: vb.selectionKey, line: vb.line, odds: current, bookmaker: best?.bookmaker.slug ?? vb.bookmakerSlug, probability: vb.probability, label: `${marketName(vb.marketKey)}: ${sel}`, fixtureLabel: `${f.homeTeam.name} vs ${f.awayTeam.name}`, kickoff: f.kickoff }}
         />
         <ShareButton entityType="value_bet" entityId={vb.id} />
-        {best && (
+        {best && !IS_DEMO && (
           <a href={`/go?bookmaker=${best.bookmaker.slug}&placement=value_bet&fixtureId=${f.id}`} rel="sponsored nofollow noopener" target="_blank" className="btn-ghost max-w-full flex-wrap text-center">
             Ir a {best.bookmaker.name} <SponsoredTag />
           </a>

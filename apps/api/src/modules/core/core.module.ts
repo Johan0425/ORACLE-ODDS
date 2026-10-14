@@ -23,6 +23,7 @@ import { TrackRecordService } from '../track-record/track-record.service';
 import { JobRunnerService } from '../sync/job-runner.service';
 import { SyncJobsService } from '../sync/sync-jobs.service';
 import { QueueService } from '../sync/queue.service';
+import { DemoService } from '../demo/demo.service';
 
 const SERVICES = [
   EntityResolverService,
@@ -46,6 +47,7 @@ const SERVICES = [
   JobRunnerService,
   SyncJobsService,
   QueueService,
+  DemoService,
 ];
 
 /** Servicios de dominio compartidos por la API HTTP, el worker y el CLI. */

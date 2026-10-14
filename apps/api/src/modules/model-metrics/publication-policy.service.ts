@@ -23,6 +23,11 @@ export class PublicationPolicyService {
 
   constructor(private readonly prisma: PrismaService, @Inject(APP_ENV) private readonly env: AppEnv) {}
 
+  /** Se llama tras recalibrar para que la publicación use el estado nuevo de inmediato. */
+  invalidate(): void {
+    this.cache = null;
+  }
+
   get requireCalibration(): boolean {
     return this.env.PUBLISH_REQUIRE_CALIBRATION;
   }

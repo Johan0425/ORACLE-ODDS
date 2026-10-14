@@ -24,7 +24,7 @@ import {
 import { applyCalibrator, type SerializedCalibrator } from '../calibration/calibration';
 import type { MarketKey } from '../markets/keys';
 
-export const FOOTBALL_MODEL_VERSION = 'football-ensemble-1.0.0';
+export const FOOTBALL_MODEL_VERSION = 'football-ensemble-1.0.1';
 
 /** Hiperparámetros versionados junto al modelo: cualquier cambio exige nueva versión. */
 export const FOOTBALL_MODEL_CONFIG = {
@@ -210,6 +210,9 @@ export function predictFootballFixture(input: FootballPredictionInput, now: Date
   const h2h = h2hAdjustment(input, lambdas);
   lambdas = { home: lambdas.home * h2h.factor, away: lambdas.away / h2h.factor };
 
+  if (!Number.isFinite(lambdas.home) || !Number.isFinite(lambdas.away) || lambdas.home <= 0 || lambdas.away <= 0) {
+    throw new Error(`Goles esperados no válidos (${lambdas.home}, ${lambdas.away}): datos insuficientes`);
+  }
   const matrix = buildScoreMatrix(lambdas.home, lambdas.away, cfg.rho);
 
   // Elo sobre todos los partidos conocidos de ambos equipos y su liga.
@@ -239,11 +242,14 @@ export function predictFootballFixture(input: FootballPredictionInput, now: Date
   if (!input.lineupsConfirmed) confidenceReductions.push('Alineaciones no confirmadas');
   if (!input.market?.oneXTwo) confidenceReductions.push('Sin consenso de mercado disponible antes del corte');
 
-  // Incertidumbre: λ perturbado por su error estándar relativo aproximado.
+  // Incertidumbre: error estándar relativo de una tasa Poisson = 1/√(goles esperados observados),
+  // combinando la estimación de ataque de un equipo con la de defensa del rival (incluye el prior).
   const k = cfg.strength.priorWeight;
-  const relHome = Math.sqrt(1 / (homeStrength.home.effectiveN + k) + 1 / (awayStrength.away.effectiveN + k));
-  const relAway = Math.sqrt(1 / (awayStrength.away.effectiveN + k) + 1 / (homeStrength.home.effectiveN + k));
-  const z = cfg.uncertaintyZ;
+  const rateRelSe = (lambda: number, effectiveN: number) => 1 / Math.sqrt(Math.max(lambda, 0.2) * (effectiveN + k));
+  const relHome = Math.hypot(rateRelSe(lambdas.home, homeStrength.home.effectiveN), rateRelSe(lambdas.home, awayStrength.away.effectiveN));
+  const relAway = Math.hypot(rateRelSe(lambdas.away, awayStrength.away.effectiveN), rateRelSe(lambdas.away, homeStrength.home.effectiveN));
+  // Las esquinas mueven ambos λ a la vez: z/√2 por eje mantiene la cobertura conjunta cercana al nivel declarado.
+  const z = cfg.uncertaintyZ / Math.SQRT2;
   const cornerFactors = [
     [Math.exp(z * relHome), Math.exp(z * relAway)],
     [Math.exp(z * relHome), Math.exp(-z * relAway)],
@@ -413,7 +419,7 @@ export function predictFootballFixture(input: FootballPredictionInput, now: Date
     for (const line of marketLines) {
       for (const s of ['OVER', 'UNDER'] as const) {
         const dist = totalsDistribution(lambda, line, s);
-        const env = [lambda * Math.exp(z * rel), lambda * Math.exp(-z * rel)].map((l) => effectiveProbability(totalsDistribution(l, line, s)));
+        const env = [lambda * Math.exp(cfg.uncertaintyZ * rel), lambda * Math.exp(-cfg.uncertaintyZ * rel)].map((l) => effectiveProbability(totalsDistribution(l, line, s)));
         push(marketKey, s, line, dist, env, `${s === 'OVER' ? 'Más' : 'Menos'} de ${line} ${label}: ${pct(effectiveProbability(dist))}. Promedios recientes ${h.rate.toFixed(1)} y ${a.rate.toFixed(1)}.`, [
           ...commonFactors.filter((f) => f.code !== 'ELO_GAP'),
           { code: 'LOW_LIQUIDITY_MARKET', label: 'Mercado secundario con menor liquidez', direction: 'negative' },

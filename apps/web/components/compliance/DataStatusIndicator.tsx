@@ -3,6 +3,7 @@ import type { DataStatus } from '@/lib/api';
 import { relativeAge } from '@/lib/format';
 
 const STYLE = {
+  DEMO: { dot: 'bg-warning', text: 'Modo demostración (datos ficticios)' },
   OK: { dot: 'bg-positive', text: 'Datos actualizados' },
   DEGRADED: { dot: 'bg-warning', text: 'Algunos datos con retraso' },
   NO_DATA_YET: { dot: 'bg-warning', text: 'Esperando primera sincronización' },

@@ -20,6 +20,7 @@ import { APP_ENV } from '../../config/config.module';
 import type { AppEnv } from '../../config/env';
 import { PredictionsService } from '../predictions/predictions.service';
 import { SettlementService } from '../settlement/settlement.service';
+import { PublicationPolicyService } from './publication-policy.service';
 
 interface Sample {
   p: number;
@@ -40,6 +41,7 @@ export class ModelMetricsService {
     private readonly prisma: PrismaService,
     private readonly predictions: PredictionsService,
     private readonly settlement: SettlementService,
+    private readonly policy: PublicationPolicyService,
     @Inject(APP_ENV) private readonly env: AppEnv,
   ) {}
 
@@ -48,13 +50,19 @@ export class ModelMetricsService {
    * corte 1 h antes del inicio, usando solo datos anteriores. Idempotente por
    * hash de entradas.
    */
-  async runBacktest(now = new Date()): Promise<{ targets: number; created: number }> {
+  async runBacktest(now = new Date(), deadline = Date.now() + 200_000): Promise<{ targets: number; created: number; incomplete: boolean }> {
     const from = new Date(now.getTime() - (BACKTEST_DAYS + 730) * 86_400_000);
     const history = await this.predictions.loadHistory('FOOTBALL', from, now);
     const targetsFrom = now.getTime() - BACKTEST_DAYS * 86_400_000;
     const targets = history.filter((m) => m.kickoff.getTime() >= targetsFrom).slice(-MAX_BACKTEST_FIXTURES);
     let created = 0;
+    let incomplete = false;
     for (const t of targets) {
+      // Idempotente: lo que no alcance en esta ejecución se completa en la siguiente.
+      if (Date.now() > deadline) {
+        incomplete = true;
+        break;
+      }
       const r = await this.predictions.predictAndStore(t.fixtureId, {
         cutoff: new Date(t.kickoff.getTime() - 60 * 60_000),
         status: 'BACKTEST',
@@ -63,7 +71,7 @@ export class ModelMetricsService {
       if (r?.created) created += 1;
     }
     await this.settlement.settlePending();
-    return { targets: targets.length, created };
+    return { targets: targets.length, created, incomplete };
   }
 
   private async backtestSamples(modelVersion: string): Promise<Map<string, Sample[]>> {
@@ -153,6 +161,7 @@ export class ModelMetricsService {
       }
       summary.push({ market, n: list.length, publishable, ece });
     }
+    this.policy.invalidate();
     return summary;
   }
 

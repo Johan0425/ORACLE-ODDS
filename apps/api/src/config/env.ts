@@ -66,6 +66,8 @@ export const envSchema = z
     SENTRY_DSN: optionalString,
 
     ENABLE_SYNC_WORKER: bool(false),
+    /** Habilita el generador de datos ficticios de demostración (proveedor DEMO, casas "demo-*"). */
+    DEMO_MODE: bool(false),
     /** bullmq = encolar para el worker persistente; inline = ejecutar en el mismo proceso (Vercel Functions + cron). */
     QUEUE_MODE: z.enum(['bullmq', 'inline']).default('bullmq'),
     /** Secreto que Vercel Cron envía como `Authorization: Bearer <CRON_SECRET>`. */

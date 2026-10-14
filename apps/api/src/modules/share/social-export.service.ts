@@ -19,7 +19,8 @@ export class SocialExportService {
   constructor(private readonly prisma: PrismaService, private readonly share: ShareService, @Inject(APP_ENV) private readonly env: AppEnv) {}
 
   get telegramEnabled(): boolean {
-    return this.env.ENABLE_TELEGRAM_PUBLISH && !!this.env.TELEGRAM_BOT_TOKEN && !!this.env.TELEGRAM_CHANNEL_ID;
+    // Nunca se publican datos de demostración en canales externos.
+    return !this.env.DEMO_MODE && this.env.ENABLE_TELEGRAM_PUBLISH && !!this.env.TELEGRAM_BOT_TOKEN && !!this.env.TELEGRAM_CHANNEL_ID;
   }
 
   async exportDaily(): Promise<{ created: number; published: number }> {

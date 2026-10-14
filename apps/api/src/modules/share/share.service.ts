@@ -152,6 +152,7 @@ export class ShareService {
     const fmt = (iso: string) => new Intl.DateTimeFormat(this.env.DEFAULT_LOCALE, { dateStyle: 'medium', timeStyle: 'short', timeZone: tz }).format(new Date(iso));
     const pct = (p: number | null) => (p == null ? '—' : `${(p * 100).toFixed(1)}%`);
     const footer = [
+      ...(this.env.DEMO_MODE ? ['🧪 DEMO: datos ficticios generados para mostrar el producto, no son reales'] : []),
       '⚠️ Cuotas sujetas a cambios',
       '📉 Pronóstico estadístico, no garantía de resultado',
       '🔞 Solo mayores de 18 años. Juega responsablemente.',

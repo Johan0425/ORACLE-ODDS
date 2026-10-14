@@ -6,6 +6,7 @@ import { AgeGate } from '@/components/compliance/AgeGate';
 import { CookieConsent } from '@/components/compliance/CookieConsent';
 import { ResponsibleGamingBanner } from '@/components/compliance/ResponsibleGamingBanner';
 import { BetSlipDrawer } from '@/components/slip/BetSlipDrawer';
+import { DemoBanner } from '@/components/compliance/DemoBanner';
 import { SITE_NAME, SITE_URL } from '@/lib/site';
 import './globals.css';
 
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es-CO" className={`${display.variable} ${body.variable}`}>
       <body className="min-h-screen bg-background font-body text-foreground antialiased">
+        <DemoBanner />
         <ResponsibleGamingBanner />
         <Navbar />
         <main id="main" className="mx-auto max-w-7xl px-4 pb-10 pt-8 sm:px-6">

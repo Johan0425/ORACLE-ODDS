@@ -48,4 +48,9 @@ export function shareLines(asset: ShareAsset): ShareLines {
   return { title: ch?.title ?? 'Reto', subtitle: 'Reto social sin dinero real', when: ch ? `Cierra ${formatKickoff(ch.endsAt)}` : null, rows: [['Código', ch?.code ?? '']], headline: 'Únete con un alias' };
 }
 
-export const SHARE_FOOTER = ['Cuotas sujetas a cambios', 'Pronóstico estadístico, no garantía de resultado', '18+ | Juega responsablemente'];
+export const SHARE_FOOTER = [
+  ...(process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? ['DEMO: datos ficticios, no reales'] : []),
+  'Cuotas sujetas a cambios',
+  'Pronóstico estadístico, no garantía de resultado',
+  '18+ | Juega responsablemente',
+];

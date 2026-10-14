@@ -73,9 +73,15 @@ export function leagueAverages(matches: HistoricalMatch[], cutoff: Date, halfLif
     home += w * m.homeGoals;
     away += w * m.awayGoals;
   }
-  // Sin historial de liga: promedios genéricos de fútbol europeo, marcados en la explicación como prior.
-  if (wSum === 0) return { homeGoals: 1.5, awayGoals: 1.15, sampleSize: 0 };
-  return { homeGoals: home / wSum, awayGoals: away / wSum, sampleSize: matches.length };
+  // Prior de fútbol europeo (≈ 10 partidos equivalentes): evita promedios 0 o extremos con muestras chicas.
+  const priorW = 10;
+  const PRIOR = { home: 1.5, away: 1.15 };
+  if (wSum === 0) return { homeGoals: PRIOR.home, awayGoals: PRIOR.away, sampleSize: 0 };
+  return {
+    homeGoals: (home + priorW * PRIOR.home) / (wSum + priorW),
+    awayGoals: (away + priorW * PRIOR.away) / (wSum + priorW),
+    sampleSize: matches.length,
+  };
 }
 
 function blendGoals(goals: number, xg: number | null | undefined, xgWeight: number): number {

@@ -276,7 +276,8 @@ export interface ValueBetList {
 export interface DataStatus {
   generatedAt: string;
   timezone: string;
-  overall: 'NOT_CONFIGURED' | 'NO_DATA_YET' | 'DEGRADED' | 'OK';
+  overall: 'DEMO' | 'NOT_CONFIGURED' | 'NO_DATA_YET' | 'DEGRADED' | 'OK';
+  demo?: boolean;
   message: string;
   providers: Array<{ provider: string; configured: boolean; roles: string[]; quota: { usedToday: number; dailyLimit: number; reportedRemaining: number | null } | null }>;
   jobs: Array<{ provider: string; job: string; lastSuccessfulSync: string | null; ageSeconds: number | null; stale: boolean; consecutiveFailures: number; lastError: string | null }>;

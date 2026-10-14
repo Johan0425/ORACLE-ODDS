@@ -61,6 +61,7 @@ enum DataProvider {
   THESPORTSDB
   SPORTS_GAME_ODDS
   ODDS_API_IO
+  DEMO
 }
 
 enum EntityType {

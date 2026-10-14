@@ -5,6 +5,7 @@ import type { OddsComparison, OddsMarket } from '@/lib/api';
 import { odds, relativeAge, selectionName, signedPct, pct } from '@/lib/format';
 import { FreshnessBadge, SponsoredTag } from '../ui/Badges';
 import { AddToSlipButton } from './AddToSlipButton';
+import { IS_DEMO } from '../compliance/DemoBanner';
 
 interface Props {
   data: OddsComparison;
@@ -19,6 +20,16 @@ const goHref = (slug: string, fixtureId: string) => `/go?bookmaker=${encodeURICo
  * promedio, apertura → actual, frescura y enlace al operador (marcado si es de
  * afiliado). En móvil cada selección se presenta como tarjeta.
  */
+/** Enlace al operador vía /go. En modo demo las casas son ficticias: solo se muestra el nombre. */
+function BookLink({ slug, fixtureId, children }: { slug: string; fixtureId: string; children: React.ReactNode }) {
+  if (IS_DEMO) return <span>{children}</span>;
+  return (
+    <a href={goHref(slug, fixtureId)} rel="sponsored nofollow noopener" target="_blank" className="hover:text-gold-soft">
+      {children}
+    </a>
+  );
+}
+
 export function OddsComparisonTable({ data, fixture, probabilities = {} }: Props) {
   const markets = data.markets;
   const [marketKey, setMarketKey] = useState(() => (markets.find((m) => m.marketKey === '1X2') ?? markets[0])?.marketKey + '|' + (markets.find((m) => m.marketKey === '1X2') ?? markets[0])?.lineKey);
@@ -82,9 +93,7 @@ export function OddsComparisonTable({ data, fixture, probabilities = {} }: Props
               return (
                 <tr key={b.slug} className="border-t border-line">
                   <th scope="row" className="py-2 pr-3 text-left font-medium">
-                    <a href={goHref(b.slug, fixture.id)} rel="sponsored nofollow noopener" target="_blank" className="hover:text-gold-soft">
-                      {b.name}
-                    </a>{' '}
+                    <BookLink slug={b.slug} fixtureId={fixture.id}>{b.name}</BookLink>{' '}
                     {row.some((q) => q?.isAffiliate) && <SponsoredTag />}
                   </th>
                   {row.map((q, i) => {
@@ -138,9 +147,9 @@ export function OddsComparisonTable({ data, fixture, probabilities = {} }: Props
               <ul className="mt-2 divide-y divide-line">
                 {quotes.map((q) => (
                   <li key={q.bookmaker.slug} className="flex items-center justify-between py-2 text-sm">
-                    <a href={goHref(q.bookmaker.slug, fixture.id)} rel="sponsored nofollow noopener" target="_blank" className="hover:text-gold-soft">
+                    <BookLink slug={q.bookmaker.slug} fixtureId={fixture.id}>
                       {q.bookmaker.name} {q.isAffiliate && <SponsoredTag />}
-                    </a>
+                    </BookLink>
                     <span className="tabular flex items-center gap-2">
                       <span className="text-[11px] text-muted">{signedPct(q.diffVsAverage)}</span>
                       <span className={`font-semibold ${s.best?.bookmaker.slug === q.bookmaker.slug ? 'text-gold-soft' : ''}`}>{odds(q.price)}</span>

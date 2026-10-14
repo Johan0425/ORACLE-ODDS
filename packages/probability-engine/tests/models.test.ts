@@ -162,3 +162,13 @@ describe('actualización en vivo', () => {
     expect(leading.oneXTwo.HOME).toBeGreaterThan(start.oneXTwo.HOME);
   });
 });
+
+describe('robustez con muestras mínimas', () => {
+  it('un único 0-0 en la liga no produce promedios nulos', async () => {
+    const { leagueAverages } = await import('../src');
+    const cutoff = new Date('2026-06-01');
+    const l = leagueAverages([{ kickoff: new Date('2026-05-01'), homeTeamId: 'a', awayTeamId: 'b', homeGoals: 0, awayGoals: 0 }], cutoff);
+    expect(l.homeGoals).toBeGreaterThan(1);
+    expect(l.awayGoals).toBeGreaterThan(0.8);
+  });
+});

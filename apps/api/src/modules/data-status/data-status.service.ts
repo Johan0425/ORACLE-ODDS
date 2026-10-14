@@ -69,8 +69,11 @@ export class DataStatusService {
     return {
       generatedAt: new Date(),
       timezone: this.env.DEFAULT_TIMEZONE,
-      overall: !anyConfigured ? 'NOT_CONFIGURED' : !hasData ? 'NO_DATA_YET' : jobs.some((j) => j.stale) ? 'DEGRADED' : 'OK',
-      message: !anyConfigured
+      demo: this.env.DEMO_MODE,
+      overall: this.env.DEMO_MODE ? 'DEMO' : !anyConfigured ? 'NOT_CONFIGURED' : !hasData ? 'NO_DATA_YET' : jobs.some((j) => j.stale) ? 'DEGRADED' : 'OK',
+      message: this.env.DEMO_MODE
+        ? 'Modo demostración: partidos, equipos, casas y cuotas ficticios generados para mostrar el producto. No son datos reales.'
+        : !anyConfigured
         ? 'No hay proveedores de datos configurados. La plataforma no muestra partidos ni cuotas hasta conectar una fuente real.'
         : !hasData
           ? 'Proveedores configurados; esperando la primera sincronización.'

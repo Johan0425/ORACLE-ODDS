@@ -58,7 +58,8 @@ export class IngestionService {
     const slug = slugify(key);
     const cached = this.bookmakerCache.get(slug);
     if (cached) return cached;
-    const isAuthorized = this.env.ALLOWED_BOOKMAKERS.map((b) => slugify(b)).includes(slug);
+    // En modo demo las casas ficticias "demo-*" se muestran; nunca son operadores reales.
+    const isAuthorized = this.env.ALLOWED_BOOKMAKERS.map((b) => slugify(b)).includes(slug) || (this.env.DEMO_MODE && slug.startsWith('demo-'));
     const row = await this.prisma.bookmaker.upsert({
       where: { slug },
       create: { slug, name, isAuthorized },
