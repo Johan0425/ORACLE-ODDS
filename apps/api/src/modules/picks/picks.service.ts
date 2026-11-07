@@ -143,7 +143,10 @@ export class PicksService {
       if (run) {
         for (const market of ['1X2', 'OU_GOALS', 'BTTS'] as const) {
           if (!isPublished(market)) continue;
-          const sels = run.probabilities.filter((p) => p.marketKey === market);
+          // Cada selección se calibra por separado: se renormaliza el mercado para que sume 100 %.
+          const raw = run.probabilities.filter((p) => p.marketKey === market);
+          const total = raw.reduce((a, p) => a + p.calibratedProbability, 0) || 1;
+          const sels = raw.map((p) => ({ ...p, calibratedProbability: p.calibratedProbability / total }));
           const best = sels.sort((a, b) => b.calibratedProbability - a.calibratedProbability)[0];
           if (!best) continue;
           const q = quotes
@@ -154,7 +157,7 @@ export class PicksService {
             selectionKey: best.selectionKey,
             line: best.line,
             probability: best.calibratedProbability,
-            fairOdds: best.fairOdds,
+            fairOdds: 1 / best.calibratedProbability,
             confidenceLevel: best.confidenceLevel,
             marketPrice: q?.currentPrice ?? null,
             marketBookmaker: q?.bookmaker.name ?? null,
@@ -164,7 +167,11 @@ export class PicksService {
         }
       }
       const oneXTwo = run?.probabilities.filter((p) => p.marketKey === '1X2') ?? [];
-      const p = (sel: string) => oneXTwo.find((x) => x.selectionKey === sel)?.calibratedProbability ?? null;
+      const oneXTwoTotal = oneXTwo.reduce((a, x) => a + x.calibratedProbability, 0) || 1;
+      const p = (sel: string) => {
+        const v = oneXTwo.find((x) => x.selectionKey === sel)?.calibratedProbability;
+        return v == null ? null : v / oneXTwoTotal;
+      };
       // Pronóstico destacado: la selección más probable con al menos 55 %.
       const featured = [...picks].sort((a, b) => b.probability - a.probability).find((x) => x.probability >= 0.55) ?? null;
       return {

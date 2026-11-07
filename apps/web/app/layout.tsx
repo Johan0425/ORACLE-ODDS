@@ -15,8 +15,8 @@ const body = Inter({ subsets: ['latin'], variable: '--font-body', display: 'swap
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: `${SITE_NAME} — Comparador de cuotas y probabilidades`, template: `%s · ${SITE_NAME}` },
-  description: 'Comparación informativa de cuotas de operadores autorizados y estimaciones estadísticas calibradas. Sin apuestas en la plataforma. Solo mayores de 18 años.',
+  title: { default: `${SITE_NAME} — Pronósticos de fútbol con estadística`, template: `%s · ${SITE_NAME}` },
+  description: 'Pronósticos de fútbol por liga con probabilidades calibradas sobre miles de partidos reales: Liga BetPlay, Libertadores, Premier, LaLiga y más. Sin apuestas en la plataforma. Solo mayores de 18 años.',
   openGraph: { type: 'website', siteName: SITE_NAME, locale: 'es_CO' },
   twitter: { card: 'summary_large_image' },
   robots: { index: true, follow: true },
