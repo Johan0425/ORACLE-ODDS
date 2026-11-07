@@ -67,7 +67,9 @@ export class AiAnalysisService {
       body: JSON.stringify({
         model: this.env.GROQ_MODEL,
         temperature: 0.4,
-        max_tokens: 400,
+        max_tokens: 700,
+        // Modelos de razonamiento (gpt-oss, qwen3): razonamiento breve y fuera de la respuesta.
+        ...(/gpt-oss|qwen3/.test(this.env.GROQ_MODEL) ? { reasoning_effort: 'low', include_reasoning: false } : {}),
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: `Datos del partido:\n${context}\n\nEscribe el análisis.` },
@@ -76,7 +78,10 @@ export class AiAnalysisService {
       signal: AbortSignal.timeout(30_000),
     });
     if (res.status === 429) throw new RateLimitedError();
-    if (!res.ok) throw new Error(`Groq respondió ${res.status}`);
+    if (!res.ok) {
+      const err = (await res.json().catch(() => null)) as { error?: { code?: string } } | null;
+      throw new Error(`Groq respondió ${res.status}${err?.error?.code ? ` (${err.error.code})` : ''}`);
+    }
     const body = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
     const text = body.choices?.[0]?.message?.content?.trim();
     if (!text) throw new Error('Groq devolvió una respuesta vacía');
@@ -102,6 +107,7 @@ export class AiAnalysisService {
     let created = 0;
     let failed = 0;
     let rateLimited = false;
+    let lastError: string | null = null;
     for (const r of pending.slice(0, this.env.GROQ_MAX_PER_RUN)) {
       try {
         const context = await this.buildContext(r.fixtureId, r.id);
@@ -119,9 +125,12 @@ export class AiAnalysisService {
           break;
         }
         failed += 1;
+        lastError = (e as Error).message;
         this.logger.warn(`Análisis omitido para ${r.fixtureId}: ${(e as Error).message}`);
       }
     }
+    // Si ninguna petición funcionó (clave o modelo inválidos) el job falla y se ve en /status.
+    if (created === 0 && failed > 0) throw new Error(`Ningún análisis generado: ${lastError}`);
     return { candidates: pending.length, created, failed, rateLimited };
   }
 

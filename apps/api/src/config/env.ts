@@ -134,7 +134,7 @@ export const envSchema = z
     /** Groq (plan gratuito): análisis redactado complementario. Sin clave la función se desactiva. */
     GROQ_API_KEY: optionalString,
     GROQ_BASE_URL: z.string().url().default('https://api.groq.com/openai/v1'),
-    GROQ_MODEL: z.string().default('llama-3.3-70b-versatile'),
+    GROQ_MODEL: z.string().default('openai/gpt-oss-120b'),
     /** Máximo de análisis nuevos por ejecución (cuida el cupo diario gratuito de tokens). */
     GROQ_MAX_PER_RUN: num(15),
     /** Solo se analizan partidos que empiezan dentro de estas horas. */

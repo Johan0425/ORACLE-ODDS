@@ -22,7 +22,7 @@ Ningún proveedor es obligatorio para arrancar: sin claves la plataforma muestra
 
 ## Groq (gratis, opcional)
 
-- Clave gratuita en console.groq.com → `GROQ_API_KEY`. Modelo por defecto `llama-3.3-70b-versatile` (`GROQ_MODEL`).
+- Clave gratuita en console.groq.com → `GROQ_API_KEY`. Modelo por defecto `openai/gpt-oss-120b` (`GROQ_MODEL`).
 - `compute:ai-analysis` redacta un análisis de 120–170 palabras para los partidos de las próximas `GROQ_HORIZON_HOURS` horas, a partir de datos ya calculados (probabilidades, goles esperados, forma, tabla, H2H). Tiene prohibido inventar lesiones o noticias. Máximo `GROQ_MAX_PER_RUN` por ejecución; ante un 429 se detiene y continúa en la siguiente.
 
 ## Cómo obtener las claves
