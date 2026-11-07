@@ -1,4 +1,6 @@
-import { Controller, ForbiddenException, Get, Headers, Inject, NotFoundException, Param, ServiceUnavailableException } from '@nestjs/common';
+import { Controller, ForbiddenException, Get, Headers, HttpCode, Inject, Logger, NotFoundException, Param, Query, Res, ServiceUnavailableException } from '@nestjs/common';
+import type { Response } from 'express';
+import { waitUntil } from '@vercel/functions';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { APP_ENV } from '../../config/config.module';
@@ -43,14 +45,40 @@ export const CRON_GROUPS: Record<string, JobName[]> = {
 @SkipThrottle()
 @Controller('cron')
 export class CronController {
+  private readonly logger = new Logger(CronController.name);
+
   constructor(private readonly jobs: SyncJobsService, private readonly demo: DemoService, @Inject(APP_ENV) private readonly env: AppEnv) {}
 
+  /**
+   * `?async=1`: responde 202 al instante y ejecuta el grupo en segundo plano
+   * (waitUntil). Para disparadores externos con timeout corto (cron-job.org: 30 s).
+   */
   @Get(':group')
-  async run(@Param('group') group: string, @Headers('authorization') auth: string | undefined) {
+  @HttpCode(200)
+  async run(
+    @Param('group') group: string,
+    @Headers('authorization') auth: string | undefined,
+    @Query('async') async: string | undefined,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     if (!this.env.CRON_SECRET) throw new ServiceUnavailableException('CRON_SECRET no configurado');
     if (!auth || !safeEqual(auth, `Bearer ${this.env.CRON_SECRET}`)) throw new ForbiddenException();
     const jobs = CRON_GROUPS[group];
     if (!jobs) throw new NotFoundException(`Grupo desconocido: ${group}`);
+    if (async === '1' || async === 'true') {
+      waitUntil(
+        this.runGroup(group, jobs).then(
+          (r) => this.logger.log(`Cron ${group} terminado en ${r.durationMs} ms`),
+          (e: Error) => this.logger.error(`Cron ${group} falló: ${e.message}`),
+        ),
+      );
+      res.status(202);
+      return { group, accepted: true };
+    }
+    return this.runGroup(group, jobs);
+  }
+
+  private async runGroup(group: string, jobs: JobName[]) {
     const started = Date.now();
     const results: Array<{ job: JobName | 'demo:advance' | 'demo:purge'; status: string; reason?: string; ms: number }> = [];
     const pending: JobName[] = [];
