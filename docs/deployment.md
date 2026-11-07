@@ -34,9 +34,10 @@ docker build -f apps/api/Dockerfile -t oracle-odds-api .
 Producción actual: web en el proyecto Vercel `oracle-odds` (https://web-chi-roan-84.vercel.app) y API en `oracle-odds-api` (https://oracle-odds-api.vercel.app, también `bet-predict.joanpe.dev`), con Postgres en Neon.
 
 - **Sin worker ni BullMQ**: `QUEUE_MODE=inline`. Los jobs se ejecutan dentro de la función, disparados por `GET /api/v1/cron/{daily|odds|live|social}` con `Authorization: Bearer $CRON_SECRET`. Cada invocación respeta `CRON_TIME_BUDGET_MS` (240 s) y deja pendientes los jobs que no alcancen.
-- **Vercel Cron** (`apps/api/vercel.json`) ejecuta `daily` a las 09:00 UTC (el plan Hobby solo admite una ejecución diaria).
+- **Vercel Cron** (`apps/api/vercel.json`): en Hobby cada cron corre una vez al día, pero se admiten hasta 100 por proyecto, así que se declaran 35 a horas distintas: `live` cada hora (`?h=N` solo distingue la ruta), `odds` cada 3 h, `model` dos veces al día y `daily` a las 09:00 UTC. En Hobby cada ejecución puede dispararse en cualquier minuto de su hora.
+- Disparadores externos con timeout corto pueden usar `?async=1`: la API responde 202 y ejecuta el grupo en segundo plano (`waitUntil`).
 - **Grupos**: `daily` (todo), `odds` (histórico ESPN si falta, ventana, cuotas, predicciones), `live` (marcadores), `model` (backtest walk-forward, calibración y análisis IA).
-- **Frecuentes** (`odds` y `live` cada 30 min, `model` cada 3 h): workflow `.github/workflows/scheduled-sync.yml`. Requiere los secretos de repositorio `ORACLE_API_URL` y `CRON_SECRET` y la variable `ENABLE_SCHEDULED_SYNC=true`. Para frecuencias de en vivo reales (15–60 s) usa el worker persistente (Render) o el plan Pro.
+- **Alternativa** (`odds` y `live` cada 30 min, `model` cada 3 h): workflow `.github/workflows/scheduled-sync.yml`. Requiere los secretos de repositorio `ORACLE_API_URL` y `CRON_SECRET` y la variable `ENABLE_SCHEDULED_SYNC=true`. Para frecuencias de en vivo reales (15–60 s) usa el worker persistente (Render) o el plan Pro.
 - **Migraciones**: el build de la API ejecuta `prisma migrate deploy` (usa `DATABASE_URL_UNPOOLED`).
 - **Web**: Root Directory `apps/web`; `apps/web/vercel.json` instala y construye desde la raíz del monorepo (depende de `packages/probability-engine`).
 - **Locks**: sin Redis en la API se usa un lock en memoria; los jobs son idempotentes, así que una ejecución concurrente no duplica datos.
