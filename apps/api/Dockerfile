@@ -2,7 +2,7 @@
 # Contexto de build = raíz del monorepo:  docker build -f apps/api/Dockerfile .
 #   API:     docker run ... oracle-odds-api            (PROCESS_ROLE=api, por defecto)
 #   Worker:  docker run -e PROCESS_ROLE=worker ...      (proceso persistente BullMQ)
-FROM node:22-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /repo
 RUN apk add --no-cache openssl
 COPY package.json package-lock.json ./
@@ -16,7 +16,7 @@ RUN npm run build -w packages/probability-engine \
  && npm run build -w apps/api \
  && npm prune --omit=dev --workspace apps/api --workspace packages/probability-engine --include-workspace-root
 
-FROM node:22-alpine AS runtime
+FROM node:25-alpine AS runtime
 WORKDIR /repo
 RUN apk add --no-cache openssl tini && addgroup -S app && adduser -S app -G app
 ENV NODE_ENV=production
