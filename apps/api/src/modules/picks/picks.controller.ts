@@ -1,4 +1,4 @@
-import { Controller, DefaultValuePipe, Get, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, DefaultValuePipe, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { PicksService } from './picks.service';
 
@@ -16,5 +16,11 @@ export class PicksController {
     @Query('country') country?: string,
   ) {
     return this.picks.week({ offset: Math.max(-8, Math.min(8, offset)), leagueId: leagueId || undefined, country: country?.slice(0, 60) || undefined });
+  }
+
+  @Get('fixture/:id')
+  @ApiOperation({ summary: 'Pronóstico resumido de un partido (selecciones más probables y resultado si terminó)' })
+  fixture(@Param('id') id: string) {
+    return this.picks.fixture(id);
   }
 }

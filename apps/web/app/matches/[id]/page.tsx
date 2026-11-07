@@ -27,8 +27,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const r = await apiGet<FixtureDetail>(`/fixtures/${id}`);
   if (!r.ok) return { title: 'Partido' };
   const f = r.data;
-  const title = `${f.homeTeam.name} vs ${f.awayTeam.name}: cuotas y probabilidades`;
-  const description = `${f.league.name} · ${formatKickoff(f.kickoff)}. Comparación de cuotas de casas autorizadas y estimación estadística (no es garantía de resultado).`;
+  const title = `Pronóstico ${f.homeTeam.name} vs ${f.awayTeam.name}`;
+  const description = `${f.league.name} · ${formatKickoff(f.kickoff)} (hora Colombia). Probabilidades del modelo, forma, tabla y análisis. Estimación estadística, no garantía de resultado.`;
   return { title, description, alternates: { canonical: `/matches/${f.id}` }, openGraph: { title, description, url: `${SITE_URL}/matches/${f.id}` } };
 }
 

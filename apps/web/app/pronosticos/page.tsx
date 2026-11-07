@@ -9,11 +9,6 @@ import { LiveDot } from '@/components/ui/Badges';
 import { DataUnavailable, EmptyState } from '@/components/ui/EmptyState';
 import { SharePicks } from '@/components/share/SharePicks';
 
-export const metadata: Metadata = {
-  title: 'Pronósticos por semana',
-  description: 'Pronósticos estadísticos de la semana pasada, la actual y las siguientes, por liga, con los aciertos de los partidos ya jugados.',
-  alternates: { canonical: '/pronosticos' },
-};
 export const revalidate = 120;
 
 const WEEKS = [
@@ -124,6 +119,26 @@ function shareText(d: WeekPicks, week: string, leagueName: string | null): strin
 }
 
 type SP = Promise<{ semana?: string; liga?: string }>;
+
+export async function generateMetadata({ searchParams }: { searchParams: SP }): Promise<Metadata> {
+  const sp = await searchParams;
+  const offset = Math.max(-8, Math.min(8, Number.parseInt(sp.semana ?? '0', 10) || 0));
+  const week = WEEKS.find((w) => w.offset === offset)?.label ?? 'Pronósticos';
+  const qs = new URLSearchParams();
+  if (offset !== 0) qs.set('semana', String(offset));
+  if (sp.liga) qs.set('liga', sp.liga);
+  const q = qs.toString() ? `?${qs}` : '';
+  const title = `Pronósticos de fútbol · ${week}`;
+  const description = 'Probabilidades calibradas por liga: Liga BetPlay, Libertadores, Premier, LaLiga y más, con los aciertos de los partidos ya jugados.';
+  const image = { url: `/og/pronosticos${q}`, width: 1200, height: 630, alt: title };
+  return {
+    title,
+    description,
+    alternates: { canonical: `/pronosticos${q}` },
+    openGraph: { title, description, url: `/pronosticos${q}`, images: [image] },
+    twitter: { card: 'summary_large_image', title, description, images: [image.url] },
+  };
+}
 
 export default async function PicksPage({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;

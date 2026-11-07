@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { FOOTBALL_MODEL_VERSION } from '@oracle-odds/probability-engine';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -65,6 +65,13 @@ function settle(marketKey: Market, selectionKey: string, line: number | null, ho
 export class PicksService {
   constructor(private readonly prisma: PrismaService, private readonly policy: PublicationPolicyService, @Inject(APP_ENV) private readonly env: AppEnv) {}
 
+  /** Pronóstico resumido de un partido (mismo formato que cada elemento de la semana). */
+  async fixture(idOrSlug: string) {
+    const { items } = await this.build({ ...VERIFIED, sport: { key: 'FOOTBALL' }, OR: [{ id: idOrSlug }, { slug: idOrSlug }] });
+    if (!items[0]) throw new NotFoundException(`Partido ${idOrSlug} no encontrado`);
+    return items[0];
+  }
+
   async week(params: { offset: number; leagueId?: string; country?: string }) {
     const range = weekRange(params.offset, this.env.DEFAULT_TIMEZONE);
     const where: Prisma.FixtureWhereInput = {
@@ -75,6 +82,11 @@ export class PicksService {
       leagueId: params.leagueId,
       league: params.country ? { country: params.country } : undefined,
     };
+    const { items, published, isPublished } = await this.build(where);
+    return this.summarize(params.offset, range, items, published, isPublished);
+  }
+
+  private async build(where: Prisma.FixtureWhereInput) {
     const fixtures = await this.prisma.fixture.findMany({
       where,
       orderBy: { kickoff: 'asc' },
@@ -182,6 +194,16 @@ export class PicksService {
       };
     });
 
+    return { items, published, isPublished };
+  }
+
+  private summarize(
+    offset: number,
+    range: { gte: Date; lt: Date },
+    items: Awaited<ReturnType<PicksService['build']>>['items'],
+    published: Map<string, { published: boolean; reason: string }>,
+    isPublished: (m: string) => boolean,
+  ) {
     const settled = items.flatMap((i) => i.picks).filter((x) => x.result);
     const byMarket = (['1X2', 'OU_GOALS', 'BTTS'] as const).map((m) => {
       const list = settled.filter((x) => x.marketKey === m);
@@ -192,7 +214,7 @@ export class PicksService {
       a.name.localeCompare(b.name),
     );
     return {
-      offset: params.offset,
+      offset,
       range: { from: range.gte, to: range.lt },
       timezone: this.env.DEFAULT_TIMEZONE,
       requireCalibration: this.policy.requireCalibration,
