@@ -108,7 +108,9 @@ export class AiAnalysisService {
     let failed = 0;
     let rateLimited = false;
     let lastError: string | null = null;
-    for (const r of pending.slice(0, this.env.GROQ_MAX_PER_RUN)) {
+    for (const [i, r] of pending.slice(0, this.env.GROQ_MAX_PER_RUN).entries()) {
+      // El plan gratuito limita tokens por minuto: se espacian las peticiones.
+      if (i > 0) await new Promise((done) => setTimeout(done, 7_000));
       try {
         const context = await this.buildContext(r.fixtureId, r.id);
         if (!context) continue;
