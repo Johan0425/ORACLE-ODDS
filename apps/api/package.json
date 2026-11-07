@@ -33,7 +33,7 @@
     "@vercel/functions": "^2.2.13",
     "bullmq": "^5.28.1",
     "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.1",
+    "class-validator": "^0.15.1",
     "express": "^4.21.1",
     "helmet": "^8.3.0",
     "ioredis": "^5.4.1",
