@@ -62,6 +62,7 @@ enum DataProvider {
   SPORTS_GAME_ODDS
   ODDS_API_IO
   DEMO
+  ESPN
 }
 
 enum EntityType {
@@ -311,6 +312,7 @@ model Fixture {
   oddsSnapshots      OddsSnapshot[]
   oddsQuotes         OddsQuote[]
   predictionRuns     PredictionRun[]
+  analyses           FixtureAnalysis[]
   valueBets          ValueBet[]
   affiliateClicks    AffiliateClick[]
   challengeFixtures  ChallengeFixture[]
@@ -574,6 +576,22 @@ model PredictionRun {
   @@index([fixtureId, generatedAt])
   @@index([status, modelVersion])
   @@map("prediction_runs")
+}
+
+/// Análisis en texto generado por un LLM (Groq) a partir de una predicción ya
+/// calculada. Es un complemento redactado: nunca cambia probabilidades.
+model FixtureAnalysis {
+  id              String   @id @default(cuid())
+  fixtureId       String
+  fixture         Fixture  @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  predictionRunId String   @unique
+  provider        String
+  model           String
+  content         String
+  createdAt       DateTime @default(now())
+
+  @@index([fixtureId, createdAt])
+  @@map("fixture_analyses")
 }
 
 model CalculatedProbability {

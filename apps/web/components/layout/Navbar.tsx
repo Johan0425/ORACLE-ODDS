@@ -6,7 +6,9 @@ import { useEffect, useState } from 'react';
 import { useBetSlip } from '@/lib/betslip-store';
 
 export const NAV = [
+  { href: '/pronosticos', label: 'Pronósticos' },
   { href: '/matches', label: 'Partidos' },
+  { href: '/leagues', label: 'Ligas' },
   { href: '/live', label: 'En vivo' },
   { href: '/best-bets', label: 'Oportunidades' },
   { href: '/odds-comparison', label: 'Comparador' },
@@ -35,7 +37,7 @@ export function Navbar() {
           <span aria-hidden className="grid h-7 w-7 place-items-center rounded-lg bg-gold text-background">◆</span>
           <span>Oracle Odds</span>
         </Link>
-        <ul className="hidden items-center gap-5 lg:flex">
+        <ul className="hidden items-center gap-5 xl:flex">
           {NAV.map((l) => {
             const active = pathname === l.href || pathname?.startsWith(`${l.href}/`);
             return (
@@ -52,14 +54,14 @@ export function Navbar() {
             Slip
             <span className="tabular grid h-5 min-w-5 place-items-center rounded-full bg-gold px-1 text-xs font-bold text-background">{hydrated ? legs : 0}</span>
           </button>
-          <button type="button" className="btn-ghost px-3 lg:hidden" aria-expanded={open} aria-controls="mobile-nav" onClick={() => setOpen((v) => !v)}>
+          <button type="button" className="btn-ghost px-3 xl:hidden" aria-expanded={open} aria-controls="mobile-nav" onClick={() => setOpen((v) => !v)}>
             <span aria-hidden>{open ? '✕' : '☰'}</span>
             <span className="sr-only">Menú</span>
           </button>
         </div>
       </nav>
       {open && (
-        <ul id="mobile-nav" className="grid gap-1 border-t border-line px-4 py-3 lg:hidden">
+        <ul id="mobile-nav" className="grid gap-1 border-t border-line px-4 py-3 xl:hidden">
           {NAV.map((l) => (
             <li key={l.href}>
               <Link href={l.href} className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-surface-2">

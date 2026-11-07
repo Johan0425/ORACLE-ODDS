@@ -15,6 +15,8 @@ import { ModelMetricsService } from '../model-metrics/model-metrics.service';
 import { LiveEventsService } from '../live/live-events.service';
 import { ChallengesService } from '../challenges/challenges.service';
 import { SocialExportService } from '../share/social-export.service';
+import { EspnSyncService, type EspnCounters } from '../ingestion/espn-sync.service';
+import { AiAnalysisService } from '../ai/ai-analysis.service';
 import { JobRunnerService, SkipJob, type JobOutcome } from './job-runner.service';
 
 export const JOB_NAMES = [
@@ -35,6 +37,10 @@ export const JOB_NAMES = [
   'compute:value-bets',
   'compute:model-metrics',
   'export:social-card',
+  'sync:espn-history',
+  'sync:espn-fixtures',
+  'sync:espn-live',
+  'compute:ai-analysis',
 ] as const;
 
 export type JobName = (typeof JOB_NAMES)[number];
@@ -68,17 +74,44 @@ export class SyncJobsService {
     private readonly live: LiveEventsService,
     private readonly challenges: ChallengesService,
     private readonly social: SocialExportService,
+    private readonly espn: EspnSyncService,
+    private readonly ai: AiAnalysisService,
     @Inject(APP_ENV) private readonly env: AppEnv,
   ) {}
 
   private providerOf(name: JobName): DataProvider | null {
+    if (name.startsWith('sync:espn-')) return 'ESPN';
     if (['sync:prematch-odds', 'sync:live-odds'].includes(name)) return 'THE_ODDS_API';
-    if (name.startsWith('sync:') && !['sync:sports-catalog', 'sync:settlements'].includes(name)) return 'API_FOOTBALL';
+    if (name.startsWith('sync:') && !['sync:sports-catalog', 'sync:settlements', 'sync:results'].includes(name)) return 'API_FOOTBALL';
     return null;
   }
 
   async execute(name: JobName, correlationId?: string): Promise<JobOutcome> {
     return this.runner.run(name, this.providerOf(name), () => this.handlers[name](), { correlationId });
+  }
+
+  private requireEspn() {
+    if (!this.providers.espn.isConfigured()) throw new SkipJob('PROVIDER_NOT_CONFIGURED: ENABLE_ESPN=false');
+  }
+
+  /** Resultado de un job ESPN: falla solo si todas las peticiones fallaron. */
+  private espnOutcome(c: EspnCounters): JobOutcome {
+    if (c.requests > 0 && c.errors.length >= c.requests) throw new Error(c.errors.slice(0, 5).join('; '));
+    const notes = [...(c.pending.length ? [`pendiente para la próxima ejecución: ${c.pending.length}`] : []), ...c.errors.slice(0, 5)];
+    return {
+      status: 'SUCCEEDED',
+      fetched: c.fetched,
+      created: c.created,
+      updated: c.updated + c.odds,
+      duplicates: c.unchanged,
+      reason: notes.length ? notes.join('; ').slice(0, 500) : undefined,
+      details: { requests: c.requests, odds: c.odds, standings: c.standings, pending: c.pending.length, errors: c.errors.length },
+    };
+  }
+
+  /** Presupuesto de tiempo de los jobs largos: deja margen al resto del grupo de cron. */
+  private deadline(ms = 150_000): number {
+    return Date.now() + Math.min(ms, Math.max(30_000, this.env.CRON_TIME_BUDGET_MS - 60_000));
   }
 
   private requireApiFootball() {
@@ -289,7 +322,7 @@ export class SyncJobsService {
     },
 
     'compute:predictions': async () => {
-      const r = await this.predictions.computeUpcoming();
+      const r = await this.predictions.computeUpcoming(this.env.PREDICTION_DAYS_AHEAD, this.deadline());
       return { status: 'SUCCEEDED', fetched: r.fixtures, created: r.created, duplicates: r.unchanged, details: r };
     },
 
@@ -306,6 +339,42 @@ export class SyncJobsService {
     'export:social-card': async () => {
       const r = await this.social.exportDaily();
       return { status: 'SUCCEEDED', created: r.created, details: r };
+    },
+
+    'sync:espn-history': async () => {
+      this.requireEspn();
+      return this.espnOutcome(await this.espn.backfill(this.deadline()));
+    },
+
+    'sync:espn-fixtures': async () => {
+      this.requireEspn();
+      return this.espnOutcome(await this.espn.syncWindow(this.deadline()));
+    },
+
+    'sync:espn-live': async () => {
+      this.requireEspn();
+      const c = await this.espn.syncLive();
+      if (c.requests === 0) throw new SkipJob('NO_ACTIVE_FIXTURES');
+      const touched = await this.prisma.fixture.findMany({
+        where: { id: { in: c.touched } },
+        select: { id: true, status: true, statusDetail: true, elapsedMinutes: true, homeScore: true, awayScore: true },
+      });
+      for (const f of touched) {
+        await this.live.publish({
+          type: 'fixture',
+          fixtureId: f.id,
+          at: new Date().toISOString(),
+          latencySeconds: null,
+          payload: { status: f.status, statusDetail: f.statusDetail, elapsed: f.elapsedMinutes, homeScore: f.homeScore, awayScore: f.awayScore },
+        });
+      }
+      return this.espnOutcome(c);
+    },
+
+    'compute:ai-analysis': async () => {
+      if (!this.ai.enabled) throw new SkipJob('PROVIDER_NOT_CONFIGURED: GROQ_API_KEY');
+      const r = await this.ai.generatePending();
+      return { status: 'SUCCEEDED', fetched: r.candidates, created: r.created, reason: r.rateLimited ? 'Límite gratuito de Groq alcanzado: continúa en la próxima ejecución' : undefined, details: r };
     },
   };
 

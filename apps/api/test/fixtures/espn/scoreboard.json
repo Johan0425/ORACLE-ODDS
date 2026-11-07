@@ -1,0 +1,413 @@
+{
+ "leagues": [
+  {
+   "name": "Fictional Primera",
+   "abbreviation": "FIC",
+   "logos": [
+    {
+     "href": "https://example.test/league.png"
+    }
+   ],
+   "season": {
+    "year": 2026,
+    "displayName": "2026 Fictional"
+   }
+  }
+ ],
+ "events": [
+  {
+   "id": "900001",
+   "date": "2026-10-10T20:00Z",
+   "season": {
+    "year": 2026,
+    "slug": "clausura"
+   },
+   "status": {
+    "displayClock": "90'+4'",
+    "period": 2,
+    "type": {
+     "name": "STATUS_FULL_TIME",
+     "state": "post",
+     "completed": true,
+     "shortDetail": "FT"
+    }
+   },
+   "competitions": [
+    {
+     "venue": {
+      "fullName": "Estadio Ficticio"
+     },
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "2",
+       "team": {
+        "id": "7001",
+        "displayName": "Atlético Prueba",
+        "abbreviation": "ATL",
+        "logo": "https://example.test/7001.png"
+       },
+       "linescores": [
+        {
+         "value": 1
+        },
+        {
+         "value": 0
+        }
+       ]
+      },
+      {
+       "homeAway": "away",
+       "score": "1",
+       "team": {
+        "id": "7002",
+        "displayName": "Deportivo Muestra",
+        "abbreviation": "DEP",
+        "logo": "https://example.test/7002.png"
+       },
+       "linescores": [
+        {
+         "value": 0
+        },
+        {
+         "value": 0
+        }
+       ]
+      }
+     ],
+     "odds": [
+      {
+       "provider": {
+        "id": "100",
+        "name": "DraftKings"
+       },
+       "overUnder": 2.5,
+       "moneyline": {
+        "home": {
+         "open": {
+          "odds": "-145"
+         },
+         "close": {
+          "odds": "-105"
+         }
+        },
+        "away": {
+         "open": {
+          "odds": "+340"
+         },
+         "close": {
+          "odds": "+275"
+         }
+        },
+        "draw": {
+         "open": {
+          "odds": "+245"
+         },
+         "close": {
+          "odds": "+235"
+         }
+        }
+       },
+       "total": {
+        "over": {
+         "close": {
+          "line": "o2.5",
+          "odds": "-105"
+         }
+        },
+        "under": {
+         "close": {
+          "line": "u2.5",
+          "odds": "-125"
+         }
+        }
+       },
+       "pointSpread": {
+        "home": {
+         "close": {
+          "line": "-0.5",
+          "odds": "-110"
+         }
+        },
+        "away": {
+         "close": {
+          "line": "+0.5",
+          "odds": "-125"
+         }
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "900002",
+   "date": "2026-10-14T12:30Z",
+   "season": {
+    "year": 2026
+   },
+   "status": {
+    "displayClock": "67'",
+    "period": 2,
+    "type": {
+     "name": "STATUS_SECOND_HALF",
+     "state": "in",
+     "completed": false,
+     "shortDetail": "67'"
+    }
+   },
+   "competitions": [
+    {
+     "venue": {
+      "fullName": "Estadio Ficticio"
+     },
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "0",
+       "team": {
+        "id": "7003",
+        "displayName": "Real Ensayo",
+        "abbreviation": "REA",
+        "logo": "https://example.test/7003.png"
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": "0",
+       "team": {
+        "id": "7004",
+        "displayName": "Unión Ejemplo",
+        "abbreviation": "UNI",
+        "logo": "https://example.test/7004.png"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "provider": {
+        "id": "100",
+        "name": "DraftKings"
+       },
+       "overUnder": 2.5,
+       "moneyline": {
+        "home": {
+         "open": {
+          "odds": "-145"
+         },
+         "close": {
+          "odds": "-105"
+         }
+        },
+        "away": {
+         "open": {
+          "odds": "+340"
+         },
+         "close": {
+          "odds": "+275"
+         }
+        },
+        "draw": {
+         "open": {
+          "odds": "+245"
+         },
+         "close": {
+          "odds": "+235"
+         }
+        }
+       },
+       "total": {
+        "over": {
+         "close": {
+          "line": "o2.5",
+          "odds": "-105"
+         }
+        },
+        "under": {
+         "close": {
+          "line": "u2.5",
+          "odds": "-125"
+         }
+        }
+       },
+       "pointSpread": {
+        "home": {
+         "close": {
+          "line": "-0.5",
+          "odds": "-110"
+         }
+        },
+        "away": {
+         "close": {
+          "line": "+0.5",
+          "odds": "-125"
+         }
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "900003",
+   "date": "2026-10-17T23:00Z",
+   "season": {
+    "year": 2026
+   },
+   "status": {
+    "displayClock": "0'",
+    "period": 0,
+    "type": {
+     "name": "STATUS_SCHEDULED",
+     "state": "pre",
+     "completed": false,
+     "shortDetail": "Scheduled"
+    }
+   },
+   "competitions": [
+    {
+     "venue": {
+      "fullName": "Estadio Ficticio"
+     },
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "0",
+       "team": {
+        "id": "7001",
+        "displayName": "Atlético Prueba",
+        "abbreviation": "ATL",
+        "logo": "https://example.test/7001.png"
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": "0",
+       "team": {
+        "id": "7003",
+        "displayName": "Real Ensayo",
+        "abbreviation": "REA",
+        "logo": "https://example.test/7003.png"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "provider": {
+        "id": "100",
+        "name": "DraftKings"
+       },
+       "overUnder": 2.5,
+       "moneyline": {
+        "home": {
+         "open": {
+          "odds": "-145"
+         },
+         "close": {
+          "odds": "-105"
+         }
+        },
+        "away": {
+         "open": {
+          "odds": "+340"
+         },
+         "close": {
+          "odds": "+275"
+         }
+        },
+        "draw": {
+         "open": {
+          "odds": "+245"
+         },
+         "close": {
+          "odds": "+235"
+         }
+        }
+       },
+       "total": {
+        "over": {
+         "close": {
+          "line": "o2.5",
+          "odds": "-105"
+         }
+        },
+        "under": {
+         "close": {
+          "line": "u2.5",
+          "odds": "-125"
+         }
+        }
+       },
+       "pointSpread": {
+        "home": {
+         "close": {
+          "line": "-0.5",
+          "odds": "-110"
+         }
+        },
+        "away": {
+         "close": {
+          "line": "+0.5",
+          "odds": "-125"
+         }
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "900004",
+   "date": "2026-10-18T23:00Z",
+   "season": {
+    "year": 2026
+   },
+   "status": {
+    "displayClock": "0'",
+    "period": 0,
+    "type": {
+     "name": "STATUS_POSTPONED",
+     "state": "post",
+     "completed": false,
+     "shortDetail": "Postponed"
+    }
+   },
+   "competitions": [
+    {
+     "venue": {
+      "fullName": "Estadio Ficticio"
+     },
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "0",
+       "team": {
+        "id": "7002",
+        "displayName": "Deportivo Muestra",
+        "abbreviation": "DEP",
+        "logo": "https://example.test/7002.png"
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": "0",
+       "team": {
+        "id": "7004",
+        "displayName": "Unión Ejemplo",
+        "abbreviation": "UNI",
+        "logo": "https://example.test/7004.png"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "broken",
+   "date": "2026-10-19T23:00Z"
+  }
+ ]
+}

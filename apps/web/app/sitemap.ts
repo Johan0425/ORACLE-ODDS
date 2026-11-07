@@ -6,7 +6,7 @@ import { MARKET_DEFINITIONS } from '@oracle-odds/probability-engine';
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const statics = ['', '/matches', '/live', '/best-bets', '/odds-comparison', '/builder', '/challenges', '/track-record', '/methodology', '/responsible-gambling', '/status', '/sponsor/betsantander', '/terms', '/privacy', '/cookies', '/disclaimer'];
+  const statics = ['', '/pronosticos', '/leagues', '/matches', '/live', '/best-bets', '/odds-comparison', '/builder', '/challenges', '/track-record', '/methodology', '/responsible-gambling', '/status', '/sponsor/betsantander', '/terms', '/privacy', '/cookies', '/disclaimer'];
   const [fixtures, leagues] = await Promise.all([apiGet<FixtureList>('/fixtures?date=week&limit=100'), apiGet<League[]>('/leagues')]);
   return [
     ...statics.map((p) => ({ url: `${SITE_URL}${p}`, changeFrequency: 'daily' as const, priority: p === '' ? 1 : 0.6 })),

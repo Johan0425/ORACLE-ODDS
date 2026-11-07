@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SPORT_MODELS } from '@oracle-odds/probability-engine';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -33,6 +33,20 @@ export class CatalogController {
       select: { id: true, name: true, slug: true, country: true, logoUrl: true, season: true, isTracked: true, sport: { select: { key: true, name: true } } },
       orderBy: [{ isTracked: 'desc' }, { name: 'asc' }],
     });
+  }
+
+  @Get('leagues/:idOrSlug/standings')
+  @ApiOperation({ summary: 'Clasificación vigente de una competición' })
+  async standings(@Param('idOrSlug') idOrSlug: string) {
+    const league = await this.prisma.league.findFirst({ where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] }, select: { id: true } });
+    if (!league) throw new NotFoundException('Competición no encontrada');
+    const rows = await this.prisma.standing.findMany({
+      where: { leagueId: league.id },
+      orderBy: [{ groupName: 'asc' }, { rank: 'asc' }],
+      include: { team: { select: { id: true, name: true, logoUrl: true } } },
+    });
+    const latest = rows.reduce((acc, s) => (s.season > acc ? s.season : acc), '');
+    return rows.filter((s) => s.season === latest);
   }
 
   @Get('markets')

@@ -81,10 +81,16 @@ export class PredictionsService {
     });
   }
 
-  /** Consenso sin margen con cuotas capturadas hasta `cutoff` en casas autorizadas (sin cuotas en vivo). */
+  /** Consenso sin margen con cuotas capturadas hasta `cutoff` en casas autorizadas o de referencia (sin cuotas en vivo). */
   async marketConsensusAt(fixtureId: string, cutoff: Date): Promise<{ consensus: MarketConsensusInput | null; ouLines: number[]; ahLines: number[] }> {
     const snaps = await this.prisma.oddsSnapshot.findMany({
-      where: { fixtureId, isLive: false, capturedAt: { lte: cutoff }, bookmaker: { isAuthorized: true, isActive: true }, marketKey: { in: ['1X2', 'OU_GOALS', 'AH'] } },
+      where: {
+        fixtureId,
+        isLive: false,
+        capturedAt: { lte: cutoff },
+        bookmaker: { isActive: true, OR: [{ isAuthorized: true }, { slug: { in: this.env.REFERENCE_BOOKMAKERS } }] },
+        marketKey: { in: ['1X2', 'OU_GOALS', 'AH'] },
+      },
       orderBy: { capturedAt: 'asc' },
       select: { bookmakerId: true, marketKey: true, selectionKey: true, line: true, lineKey: true, priceDecimal: true, capturedAt: true },
     });
@@ -270,7 +276,7 @@ export class PredictionsService {
   }
 
   /** compute:predictions — partidos de fútbol próximos con procedencia real. */
-  async computeUpcoming(daysAhead = 7): Promise<{ fixtures: number; created: number; unchanged: number; failed: number }> {
+  async computeUpcoming(daysAhead = 7, deadline = Number.POSITIVE_INFINITY): Promise<{ fixtures: number; created: number; unchanged: number; failed: number; pending: number }> {
     const now = new Date();
     const fixtures = await this.prisma.fixture.findMany({
       where: { sport: { key: 'FOOTBALL' }, status: 'SCHEDULED', primaryProvider: { not: null }, kickoff: { gt: now, lte: new Date(now.getTime() + daysAhead * 86_400_000) } },
@@ -281,12 +287,18 @@ export class PredictionsService {
     let created = 0;
     let unchanged = 0;
     let failed = 0;
+    let pending = 0;
     for (const f of fixtures) {
+      // Los más cercanos van primero: si se agota el tiempo, los lejanos se calculan en la siguiente corrida.
+      if (Date.now() > deadline) {
+        pending += 1;
+        continue;
+      }
       const r = await this.predictAndStore(f.id, { cutoff: now, history });
       if (!r) failed += 1;
       else if (r.created) created += 1;
       else unchanged += 1;
     }
-    return { fixtures: fixtures.length, created, unchanged, failed };
+    return { fixtures: fixtures.length, created, unchanged, failed, pending };
   }
 }

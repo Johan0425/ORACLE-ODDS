@@ -16,6 +16,8 @@ import { DemoService } from '../demo/demo.service';
 export const CRON_GROUPS: Record<string, JobName[]> = {
   daily: [
     'sync:sports-catalog',
+    'sync:espn-history',
+    'sync:espn-fixtures',
     'sync:leagues',
     'sync:teams',
     'sync:historical-fixtures',
@@ -27,10 +29,13 @@ export const CRON_GROUPS: Record<string, JobName[]> = {
     'sync:settlements',
     'compute:predictions',
     'compute:value-bets',
-    'compute:model-metrics',
+    'compute:ai-analysis',
   ],
-  odds: ['sync:upcoming-fixtures', 'sync:lineups', 'sync:prematch-odds', 'compute:predictions', 'compute:value-bets'],
-  live: ['sync:live-fixtures', 'sync:live-odds', 'sync:results', 'sync:settlements'],
+  // Cada 30 min: calendario/cuotas de la ventana y predicciones. El histórico es un no-op cuando ya está cargado.
+  odds: ['sync:espn-history', 'sync:espn-fixtures', 'sync:upcoming-fixtures', 'sync:lineups', 'sync:prematch-odds', 'compute:predictions', 'compute:value-bets'],
+  live: ['sync:espn-live', 'sync:live-fixtures', 'sync:live-odds', 'sync:results', 'sync:settlements'],
+  // Cada hora/día: backtest incremental y calibración (habilitan la publicación de mercados) y análisis IA.
+  model: ['compute:model-metrics', 'compute:ai-analysis'],
   social: ['export:social-card'],
 };
 

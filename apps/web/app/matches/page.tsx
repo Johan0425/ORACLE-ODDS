@@ -6,10 +6,12 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { MatchRow } from '@/components/match/MatchRow';
 import { DataUnavailable, EmptyState } from '@/components/ui/EmptyState';
 
-export const metadata: Metadata = { title: 'Calendario de partidos', description: 'Partidos reales de hoy, mañana y los próximos siete días con cuotas comparadas.' };
+export const metadata: Metadata = { title: 'Calendario de partidos', description: 'Partidos reales: resultados de los últimos días, hoy, mañana y los próximos siete días, por liga.' };
 export const revalidate = 60;
 
 const RANGES = [
+  { key: 'last7', label: 'Últimos 7 días' },
+  { key: 'yesterday', label: 'Ayer' },
   { key: 'today', label: 'Hoy' },
   { key: 'tomorrow', label: 'Mañana' },
   { key: 'week', label: 'Próximos 7 días' },
@@ -19,7 +21,7 @@ type SP = Promise<{ date?: string; sport?: string; leagueId?: string; q?: string
 
 export default async function MatchesPage({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
-  const date = RANGES.some((r) => r.key === sp.date) ? sp.date! : 'today';
+  const date = RANGES.some((r) => r.key === sp.date) || /^\d{4}-\d{2}-\d{2}$/.test(sp.date ?? '') ? sp.date! : 'today';
   const qs = new URLSearchParams({ date, limit: '100' });
   if (sp.sport) qs.set('sport', sp.sport);
   if (sp.leagueId) qs.set('leagueId', sp.leagueId);
@@ -43,7 +45,7 @@ export default async function MatchesPage({ searchParams }: { searchParams: SP }
   return (
     <>
       <PageHeader eyebrow="Calendario real" title="Partidos">
-        Horarios en hora de Colombia. Solo partidos con procedencia verificable de un proveedor de datos.
+        Horarios en hora de Colombia. Solo partidos con procedencia verificable de un proveedor de datos. ¿Buscas los pronósticos? <Link href="/pronosticos" className="text-gold hover:underline">Ver pronósticos por semana</Link>.
       </PageHeader>
 
       <nav aria-label="Rango de fechas" className="flex flex-wrap gap-2">
@@ -54,8 +56,11 @@ export default async function MatchesPage({ searchParams }: { searchParams: SP }
         ))}
       </nav>
 
-      <form className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4" action="/matches" role="search">
-        <input type="hidden" name="date" value={date} />
+      <form className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5" action="/matches" role="search">
+        <label className="text-xs text-muted">
+          Fecha
+          <input type="date" name="date" defaultValue={/^\d{4}/.test(date) ? date : ''} className="input mt-1" />
+        </label>
         <label className="text-xs text-muted">
           Deporte
           <select name="sport" defaultValue={sp.sport ?? ''} className="input mt-1">

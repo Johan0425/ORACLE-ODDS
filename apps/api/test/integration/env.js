@@ -5,3 +5,6 @@ process.env.DATABASE_URL = url;
 process.env.DATABASE_URL_UNPOOLED = url;
 process.env.LOG_LEVEL = 'error';
 for (const k of ['API_FOOTBALL_KEY', 'THE_ODDS_API_KEY', 'ODDS_API_IO_KEY', 'THESPORTSDB_KEY', 'REDIS_URL', 'REDIS_HOST', 'TELEGRAM_BOT_TOKEN']) delete process.env[k];
+// ESPN es público y está activo por defecto: en pruebas nunca se consulta.
+process.env.ENABLE_ESPN = 'false';
+delete process.env.GROQ_API_KEY;

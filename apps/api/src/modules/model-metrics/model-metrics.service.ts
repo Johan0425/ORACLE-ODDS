@@ -301,7 +301,8 @@ export class ModelMetricsService {
   }
 
   async computeAll() {
-    const backtest = await this.runBacktest();
+    // Deja margen para liquidar y calibrar dentro de la misma invocación serverless.
+    const backtest = await this.runBacktest(new Date(), Date.now() + Math.min(200_000, Math.max(60_000, this.env.CRON_TIME_BUDGET_MS - 90_000)));
     const calibration = await this.calibrateAndEvaluate();
     const live = await this.liveBettingMetrics();
     return { backtest, calibration, live };

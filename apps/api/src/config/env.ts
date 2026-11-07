@@ -109,6 +109,37 @@ export const envSchema = z
 
     THESPORTSDB_KEY: optionalString,
 
+    /** ESPN (público, sin clave): calendario, resultados, en vivo, clasificación y cuotas de referencia. */
+    ENABLE_ESPN: bool(true),
+    ESPN_BASE_URL: z.string().url().default('https://site.api.espn.com/apis'),
+    /** Slugs de liga de ESPN (p. ej. col.1, eng.1, conmebol.libertadores). Vacío = lista por defecto. */
+    ESPN_LEAGUES: csv,
+    /** Años naturales hacia atrás que se cargan como histórico (además del actual y el siguiente). */
+    ESPN_HISTORY_YEARS: num(1),
+    /** Ventana rodante de sincronización: días hacia atrás y hacia adelante. */
+    ESPN_WINDOW_PAST_DAYS: num(10),
+    ESPN_WINDOW_FUTURE_DAYS: num(45),
+    /**
+     * Casas cuyas cuotas se usan solo como referencia de mercado (consenso del
+     * modelo y cuota de referencia en pronósticos). No se muestran como operador
+     * ni llevan enlaces de apuesta.
+     */
+    REFERENCE_BOOKMAKERS: z
+      .string()
+      .optional()
+      .transform((v) => (v ?? 'draftkings').split(',').map((s) => s.trim()).filter(Boolean)),
+    /** Días hacia adelante para los que se calculan predicciones. */
+    PREDICTION_DAYS_AHEAD: num(14),
+
+    /** Groq (plan gratuito): análisis redactado complementario. Sin clave la función se desactiva. */
+    GROQ_API_KEY: optionalString,
+    GROQ_BASE_URL: z.string().url().default('https://api.groq.com/openai/v1'),
+    GROQ_MODEL: z.string().default('llama-3.3-70b-versatile'),
+    /** Máximo de análisis nuevos por ejecución (cuida el cupo diario gratuito de tokens). */
+    GROQ_MAX_PER_RUN: num(15),
+    /** Solo se analizan partidos que empiezan dentro de estas horas. */
+    GROQ_HORIZON_HOURS: num(72),
+
     /** Slugs de casas verificadas como autorizadas para el territorio. Vacío = ninguna se marca autorizada. */
     ALLOWED_BOOKMAKERS: csv,
     VIG_METHOD: z.enum(['proportional', 'power', 'shin']).default('power'),
@@ -218,6 +249,8 @@ export function providerConfigured(e: AppEnv) {
     theOddsApi: !!e.THE_ODDS_API_KEY,
     oddsApiIo: !!e.ODDS_API_IO_KEY && e.ENABLE_ODDS_API_IO,
     theSportsDb: !!e.THESPORTSDB_KEY,
+    espn: e.ENABLE_ESPN,
+    groq: !!e.GROQ_API_KEY,
     redis: !!(e.REDIS_URL || e.REDIS_HOST),
   };
 }

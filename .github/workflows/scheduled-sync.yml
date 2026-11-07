@@ -6,11 +6,14 @@ name: Scheduled sync
 
 on:
   schedule:
+    # Calendario, cuotas, predicciones y marcadores cada 30 min.
     - cron: '*/30 * * * *'
+    # Backtest/calibración y análisis IA cada 3 h.
+    - cron: '15 */3 * * *'
   workflow_dispatch:
     inputs:
       group:
-        description: 'Grupo de jobs (daily, odds, live, social)'
+        description: 'Grupo de jobs (daily, odds, live, model, social)'
         required: true
         default: odds
 
@@ -22,7 +25,7 @@ jobs:
     if: ${{ vars.ENABLE_SCHEDULED_SYNC == 'true' || github.event_name == 'workflow_dispatch' }}
     strategy:
       matrix:
-        group: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', inputs.group)) || fromJSON('["odds","live"]') }}
+        group: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', inputs.group)) || (github.event.schedule == '15 */3 * * *' && fromJSON('["model"]')) || fromJSON('["odds","live"]') }}
     steps:
       - name: Ejecutar grupo ${{ matrix.group }}
         env:

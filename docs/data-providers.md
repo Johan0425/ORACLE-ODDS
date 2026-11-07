@@ -4,10 +4,26 @@ Ningún proveedor es obligatorio para arrancar: sin claves la plataforma muestra
 
 | Proveedor | Variable | Uso | Rol |
 |---|---|---|---|
+| ESPN (endpoints públicos) | `ENABLE_ESPN` (true por defecto), `ESPN_LEAGUES` | Calendario por año/mes, resultados, marcador en vivo, clasificación, escudos y cuotas de una casa de referencia (DraftKings) | Fuente gratuita principal; sin clave ni cupo publicado |
 | API-Football (api-sports.io) | `API_FOOTBALL_KEY` | Ligas, temporadas, equipos, partidos históricos/próximos/en vivo, resultados, clasificaciones, estadísticas, eventos, alineaciones, lesiones; cuotas prepartido opcionales (`ENABLE_API_FOOTBALL_ODDS`) | Fuente autoritativa de partidos y marcadores |
 | The Odds API | `THE_ODDS_API_KEY` | Cuotas de varias casas por región (`h2h`, `spreads`, `totals`), resultados, histórico (`ENABLE_HISTORICAL_ODDS`, plan pago) | Fuente principal de cuotas |
 | odds-api.io | `ODDS_API_IO_KEY` + `ENABLE_ODDS_API_IO=true` | Cobertura adicional de casas (`/events`, `/odds/multi`) | Opcional, detrás de feature flag |
 | TheSportsDB | `THESPORTSDB_KEY` | Escudos y estadio cuando faltan | Solo metadatos, nunca cuotas ni estadísticas |
+
+## ESPN (gratis)
+
+- Sin registro. Endpoints: `site/v2/sports/soccer/{liga}/scoreboard?dates=YYYY|YYYYMM|YYYYMMDD&limit=1000` y `v2/sports/soccer/{liga}/standings`.
+- `sync:espn-history` carga años completos (`ESPN_HISTORY_YEARS` atrás + actual + siguiente). Es reanudable: salta los años ya cargados y deja pendientes los que no alcancen el presupuesto de tiempo.
+- `sync:espn-fixtures` mantiene la ventana rodante (`ESPN_WINDOW_PAST_DAYS` atrás, `ESPN_WINDOW_FUTURE_DAYS` adelante: semana pasada, actual y siguientes), cuotas de referencia de partidos no iniciados y la clasificación. Unas 3 peticiones por liga.
+- `sync:espn-live` consulta el día solo para ligas con partidos en curso o por empezar.
+- Las cuotas de ESPN (DraftKings) **no** son de un operador autorizado en Colombia: se guardan con `isAuthorized=false`, alimentan el consenso de mercado del modelo (`REFERENCE_BOOKMAKERS`) y se muestran como "referencia" en `/pronosticos`, nunca en el comparador ni con enlaces de apuesta.
+- Ligas: slugs ESPN (`col.1` Liga BetPlay, `col.copa`, `conmebol.libertadores`, `conmebol.sudamericana`, `eng.1`, `esp.1`, `ita.1`, `ger.1`, `fra.1`, `uefa.champions`, `uefa.europa`, `uefa.europa.conf`, `por.1`, `ned.1`, `eng.2`, `arg.1`, `bra.1`, `mex.1`, `usa.1`, `ecu.1`, y otras como `chi.1`, `per.1`, `uru.1`, `tur.1`, `fifa.friendly`).
+- Son endpoints públicos no documentados: si cambian, los jobs fallan de forma visible en `/status` y no se inventan datos.
+
+## Groq (gratis, opcional)
+
+- Clave gratuita en console.groq.com → `GROQ_API_KEY`. Modelo por defecto `llama-3.3-70b-versatile` (`GROQ_MODEL`).
+- `compute:ai-analysis` redacta un análisis de 120–170 palabras para los partidos de las próximas `GROQ_HORIZON_HOURS` horas, a partir de datos ya calculados (probabilidades, goles esperados, forma, tabla, H2H). Tiene prohibido inventar lesiones o noticias. Máximo `GROQ_MAX_PER_RUN` por ejecución; ante un 429 se detiene y continúa en la siguiente.
 
 ## Cómo obtener las claves
 

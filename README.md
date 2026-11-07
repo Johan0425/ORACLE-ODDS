@@ -20,7 +20,7 @@ flowchart LR
 
 | Ruta | Contenido |
 |---|---|
-| `apps/web` | Next.js 15 + Tailwind: 13 páginas de producto + legales, SEO, piezas PNG/PDF (Satori/Resvg) |
+| `apps/web` | Next.js 15 + Tailwind: pronósticos por semana (`/pronosticos`), ligas, partidos, en vivo, comparador, combinadas, retos + legales, SEO, piezas PNG/PDF (Satori/Resvg) |
 | `apps/api` | NestJS: API pública, worker de sincronización (proceso separado), Prisma |
 | `packages/probability-engine` | Motor puro: vig, EV, Kelly, Dixon-Coles, Elo, calibración, métricas, combinadas, liquidación |
 | `docs/` | Arquitectura, proveedores, metodología, validación, normalización, cumplimiento, despliegue, runbook |
@@ -32,12 +32,14 @@ Detalle: [docs/architecture.md](docs/architecture.md).
 
 | Proveedor | Variable | Rol |
 |---|---|---|
+| **ESPN (gratis, sin clave)** | `ENABLE_ESPN` (activo por defecto), `ESPN_LEAGUES` | **Fuente principal gratuita**: calendario completo por liga (histórico desde enero del año pasado hasta la próxima temporada), resultados, en vivo, clasificación y cuotas de referencia |
+| Groq (gratis, opcional) | `GROQ_API_KEY` | Análisis redactado por IA sobre cada pronóstico (no altera probabilidades) |
 | API-Football | `API_FOOTBALL_KEY` | Partidos, en vivo, resultados, estadísticas, eventos, alineaciones, lesiones, clasificaciones |
 | The Odds API | `THE_ODDS_API_KEY` | Cuotas de múltiples casas (1X2/moneyline, hándicaps, totales), resultados, histórico (plan pago) |
 | odds-api.io | `ODDS_API_IO_KEY` + `ENABLE_ODDS_API_IO` | Cobertura adicional opcional |
 | TheSportsDB | `THESPORTSDB_KEY` | Solo escudos y metadatos |
 
-Cómo obtener las claves, límites de cada plan y ajuste de frecuencias: [docs/data-providers.md](docs/data-providers.md). **Sin claves la plataforma arranca y muestra un estado honesto ("fuentes sin configurar"); nunca inventa partidos, cuotas ni resultados.**
+**Sin ninguna clave la plataforma funciona con datos reales gratis vía ESPN** (~20 ligas, ~14.000 partidos de histórico). Las demás fuentes son complementos opcionales. Cómo obtener las claves, límites de cada plan y ajuste de frecuencias: [docs/data-providers.md](docs/data-providers.md). **Sin claves la plataforma arranca y muestra un estado honesto ("fuentes sin configurar"); nunca inventa partidos, cuotas ni resultados.**
 
 ## Desarrollo local
 

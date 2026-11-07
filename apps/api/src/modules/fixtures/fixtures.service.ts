@@ -52,7 +52,11 @@ export function dateRange(spec: string | undefined, timeZone: string, now = new 
   const day = 86_400_000;
   if (spec === 'today') return { gte: today, lt: new Date(today.getTime() + day) };
   if (spec === 'tomorrow') return { gte: new Date(today.getTime() + day), lt: new Date(today.getTime() + 2 * day) };
+  if (spec === 'yesterday') return { gte: new Date(today.getTime() - day), lt: today };
   if (spec === 'week') return { gte: today, lt: new Date(today.getTime() + 8 * day) };
+  if (spec === 'last7') return { gte: new Date(today.getTime() - 7 * day), lt: today };
+  if (spec === 'last14') return { gte: new Date(today.getTime() - 14 * day), lt: today };
+  if (spec === 'next30') return { gte: today, lt: new Date(today.getTime() + 31 * day) };
   if (/^\d{4}-\d{2}-\d{2}$/.test(spec)) {
     const start = startOfLocalDay(new Date(`${spec}T12:00:00Z`), timeZone);
     return { gte: start, lt: new Date(start.getTime() + day) };
@@ -143,11 +147,16 @@ export class FixturesService {
       },
     });
     if (!fixture) throw new NotFoundException(`Partido ${idOrSlug} no encontrado`);
-    const [standings, homeForm, awayForm, h2h] = await Promise.all([
+    const [standings, homeForm, awayForm, h2h, analysis] = await Promise.all([
       this.prisma.standing.findMany({ where: { leagueId: fixture.leagueId }, orderBy: [{ groupName: 'asc' }, { rank: 'asc' }], include: { team: { select: { id: true, name: true, logoUrl: true } } } }),
       this.form(fixture.homeTeamId, fixture.kickoff),
       this.form(fixture.awayTeamId, fixture.kickoff),
       this.h2h(fixture.homeTeamId, fixture.awayTeamId, fixture.kickoff),
+      this.prisma.fixtureAnalysis.findFirst({
+        where: { fixtureId: fixture.id },
+        orderBy: { createdAt: 'desc' },
+        select: { content: true, provider: true, model: true, createdAt: true },
+      }),
     ]);
     const latestSeason = standings.reduce((acc, s) => (s.season > acc ? s.season : acc), '');
     return {
@@ -155,6 +164,7 @@ export class FixturesService {
       standings: standings.filter((s) => s.season === latestSeason),
       form: { home: homeForm, away: awayForm },
       h2h,
+      analysis,
       dataAgeSeconds: Math.round((Date.now() - fixture.updatedAt.getTime()) / 1000),
     };
   }

@@ -16,6 +16,9 @@ const STALE_AFTER: Record<string, number> = {
   'sync:historical-fixtures': 2 * 86_400,
   'sync:teams': 3 * 86_400,
   'sync:leagues': 3 * 86_400,
+  'sync:espn-fixtures': 26 * 3600,
+  'sync:espn-live': 3 * 3600,
+  'sync:espn-history': 8 * 86_400,
 };
 
 /**
@@ -46,11 +49,14 @@ export class DataStatusService {
     const registry = this.providers.status();
     const providers = await Promise.all(
       Object.entries(registry).map(async ([provider, info]) => {
-        const usage = info.configured ? await this.quota.usage(provider as never) : null;
+        // ESPN no publica cupo: no se muestra un límite inventado.
+        const usage = info.configured && provider !== 'ESPN' ? await this.quota.usage(provider as never) : null;
         return { provider, ...info, quota: usage ? { usedToday: usage.used, dailyLimit: usage.limit, reportedRemaining: usage.reportedRemaining } : null };
       }),
     );
-    const jobs = states.map((s) => {
+    const configured = new Set(providers.filter((p) => p.configured).map((p) => p.provider));
+    // Jobs de proveedores sin configurar no cuentan para el estado global (quedan como historial).
+    const jobs = states.filter((s) => configured.has(s.provider)).map((s) => {
       const age = s.lastSuccessfulSync ? Math.round((now - s.lastSuccessfulSync.getTime()) / 1000) : null;
       const limit = STALE_AFTER[s.jobName];
       return {
@@ -83,6 +89,7 @@ export class DataStatusService {
       counts: { upcomingFixtures: upcoming, liveFixtures: live, authorizedQuotes: quotes, activeValueBets },
       lastOddsUpdate: lastOdds._max.lastSeenAt,
       authorizedBookmakersConfigured: this.env.ALLOWED_BOOKMAKERS.length,
+      ai: { provider: 'GROQ', configured: !!this.env.GROQ_API_KEY, model: this.env.GROQ_API_KEY ? this.env.GROQ_MODEL : null },
       sponsor: this.sponsor.status(),
       worker: { enabledInThisProcess: this.env.ENABLE_SYNC_WORKER, redisConfigured: !!(this.env.REDIS_URL || this.env.REDIS_HOST) },
     };

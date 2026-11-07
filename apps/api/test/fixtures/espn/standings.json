@@ -1,0 +1,69 @@
+{
+ "children": [
+  {
+   "name": "Clausura",
+   "standings": {
+    "season": 2026,
+    "entries": [
+     {
+      "team": {
+       "id": "7001",
+       "displayName": "Atlético Prueba",
+       "abbreviation": "ATP"
+      },
+      "stats": [
+       {
+        "name": "rank",
+        "value": 1
+       },
+       {
+        "name": "points",
+        "value": 36
+       },
+       {
+        "name": "gamesPlayed",
+        "value": 17
+       },
+       {
+        "name": "wins",
+        "value": 11
+       },
+       {
+        "name": "ties",
+        "value": 3
+       },
+       {
+        "name": "losses",
+        "value": 3
+       },
+       {
+        "name": "pointsFor",
+        "value": 33
+       },
+       {
+        "name": "pointsAgainst",
+        "value": 14
+       }
+      ]
+     },
+     {
+      "team": {
+       "id": "7002",
+       "displayName": "Deportivo Muestra"
+      },
+      "stats": [
+       {
+        "name": "rank",
+        "value": 2
+       },
+       {
+        "name": "points",
+        "value": 30
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

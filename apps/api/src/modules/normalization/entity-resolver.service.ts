@@ -43,6 +43,18 @@ export const ODDS_KEY_TO_API_FOOTBALL_LEAGUE: Record<string, string> = {
 
 const TEAM_MERGE_SIMILARITY = 0.9;
 
+/**
+ * Memo opcional para ingestas por lotes (cientos de partidos de la misma liga):
+ * evita resolver la misma liga, temporada y equipos una y otra vez.
+ */
+export interface ResolveCache {
+  leagues: Map<string, string>;
+  teams: Map<string, string>;
+  seasons: Map<string, string | undefined>;
+}
+
+export const newResolveCache = (): ResolveCache => ({ leagues: new Map(), teams: new Map(), seasons: new Map() });
+
 @Injectable()
 export class EntityResolverService {
   private readonly logger = new Logger(EntityResolverService.name);
@@ -110,7 +122,8 @@ export class EntityResolverService {
           logoUrl: league.logoUrl ?? undefined,
           countryId: countryId ?? undefined,
           type: league.type ?? undefined,
-          ...(seasonLabel ? { season: seasonLabel } : {}),
+          // Una temporada pasada (histórico) no reemplaza la etiqueta de la vigente.
+          ...(seasonLabel && league.season?.current !== false ? { season: seasonLabel } : {}),
         },
       });
       if (league.season) await this.upsertSeason(mapped, league.season);
@@ -255,14 +268,28 @@ export class EntityResolverService {
    * mapeado → mismos equipos canónicos en ventana horaria → similitud de
    * equipos + competición + horario (incluye reprogramaciones).
    */
-  async upsertFixture(n: NormalizedFixture): Promise<{ id: string; action: UpsertAction }> {
-    const leagueId = await this.resolveLeague(n.league);
-    const homeTeamId = await this.resolveTeam(n.home, leagueId);
-    const awayTeamId = await this.resolveTeam(n.away, leagueId);
+  async upsertFixture(n: NormalizedFixture, cache?: ResolveCache): Promise<{ id: string; action: UpsertAction }> {
+    const memo = async (map: Map<string, string> | undefined, key: string, fn: () => Promise<string>) => {
+      const hit = map?.get(key);
+      if (hit) return hit;
+      const v = await fn();
+      map?.set(key, v);
+      return v;
+    };
+    const leagueKey = `${n.league.ref.provider}:${n.league.ref.externalId}:${n.league.season?.label ?? ''}`;
+    const leagueId = await memo(cache?.leagues, leagueKey, () => this.resolveLeague(n.league));
+    const homeTeamId = await memo(cache?.teams, `${n.home.ref.provider}:${n.home.ref.externalId}`, () => this.resolveTeam(n.home, leagueId));
+    const awayTeamId = await memo(cache?.teams, `${n.away.ref.provider}:${n.away.ref.externalId}`, () => this.resolveTeam(n.away, leagueId));
     const sportId = await this.sportId(n.sport);
-    const seasonId = n.league.season
-      ? (await this.prisma.season.findUnique({ where: { leagueId_label: { leagueId, label: n.league.season.label } }, select: { id: true } }))?.id
-      : undefined;
+    let seasonId: string | undefined;
+    if (n.league.season) {
+      const seasonKey = `${leagueId}:${n.league.season.label}`;
+      if (cache?.seasons.has(seasonKey)) seasonId = cache.seasons.get(seasonKey);
+      else {
+        seasonId = (await this.prisma.season.findUnique({ where: { leagueId_label: { leagueId, label: n.league.season.label } }, select: { id: true } }))?.id;
+        cache?.seasons.set(seasonKey, seasonId);
+      }
+    }
 
     let fixtureId = await this.findMapped(n.ref.provider, 'FIXTURE', n.ref.externalId);
     let action: UpsertAction = 'updated';

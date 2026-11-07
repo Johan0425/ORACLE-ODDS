@@ -46,6 +46,8 @@ export default defineConfig({
         REDIS_HOST: '',
         API_FOOTBALL_KEY: '',
         THE_ODDS_API_KEY: '',
+        ENABLE_ESPN: 'false',
+        GROQ_API_KEY: '',
       },
     },
     {

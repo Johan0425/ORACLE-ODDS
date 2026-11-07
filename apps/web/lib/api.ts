@@ -145,6 +145,7 @@ export interface FixtureDetail extends Fixture {
   standings: Array<{ rank: number; points: number; played: number; won: number; drawn: number; lost: number; goalsFor: number; goalsAgainst: number; form: string | null; groupName: string; team: { id: string; name: string; logoUrl: string | null } }>;
   form: { home: FormItem[]; away: FormItem[] };
   h2h: Array<{ fixtureId: string; kickoff: string; league: string; homeTeam: string; awayTeam: string; homeScore: number | null; awayScore: number | null }>;
+  analysis?: FixtureAnalysis | null;
   dataAgeSeconds: number;
 }
 
@@ -408,4 +409,65 @@ export interface ShareAsset {
   shareText: string;
   createdAt: string;
   expiresAt: string;
+}
+
+export interface PickSelection {
+  marketKey: '1X2' | 'OU_GOALS' | 'BTTS';
+  selectionKey: string;
+  line: number | null;
+  probability: number;
+  fairOdds: number;
+  confidenceLevel: string;
+  marketPrice: number | null;
+  marketBookmaker: string | null;
+  edge: number | null;
+  result: 'WON' | 'LOST' | null;
+}
+
+export interface WeekPick {
+  id: string;
+  slug: string | null;
+  kickoff: string;
+  status: string;
+  statusDetail: string | null;
+  elapsedMinutes: number | null;
+  homeScore: number | null;
+  awayScore: number | null;
+  homeTeam: TeamRef;
+  awayTeam: TeamRef;
+  league: LeagueRef;
+  hasAnalysis: boolean;
+  prediction: {
+    runId: string;
+    source: 'prematch' | 'backtest';
+    generatedAt: string;
+    expectedGoals: { home: number | null; away: number | null };
+    oneXTwo: { HOME: number | null; DRAW: number | null; AWAY: number | null };
+  } | null;
+  picks: PickSelection[];
+  featured: PickSelection | null;
+}
+
+export interface WeekPicks {
+  offset: number;
+  range: { from: string; to: string };
+  timezone: string;
+  requireCalibration: boolean;
+  unpublishedMarkets: Array<{ marketKey: string; reason: string }>;
+  summary: {
+    fixtures: number;
+    withPrediction: number;
+    finished: number;
+    byMarket: Array<{ marketKey: string; settled: number; won: number }>;
+    featured: { settled: number; won: number };
+  };
+  leagues: Array<LeagueRef & { fixtures: number }>;
+  items: WeekPick[];
+}
+
+export interface FixtureAnalysis {
+  content: string;
+  provider: string;
+  model: string;
+  createdAt: string;
 }

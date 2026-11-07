@@ -24,6 +24,9 @@ import { JobRunnerService } from '../sync/job-runner.service';
 import { SyncJobsService } from '../sync/sync-jobs.service';
 import { QueueService } from '../sync/queue.service';
 import { DemoService } from '../demo/demo.service';
+import { EspnSyncService } from '../ingestion/espn-sync.service';
+import { AiAnalysisService } from '../ai/ai-analysis.service';
+import { PicksService } from '../picks/picks.service';
 
 const SERVICES = [
   EntityResolverService,
@@ -48,6 +51,9 @@ const SERVICES = [
   SyncJobsService,
   QueueService,
   DemoService,
+  EspnSyncService,
+  AiAnalysisService,
+  PicksService,
 ];
 
 /** Servicios de dominio compartidos por la API HTTP, el worker y el CLI. */

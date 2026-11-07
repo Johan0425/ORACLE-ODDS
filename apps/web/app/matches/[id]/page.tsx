@@ -110,6 +110,7 @@ export default async function MatchPage({ params }: { params: Params }) {
         <ul className="flex gap-4 whitespace-nowrap text-sm">
           {[
             ['#predicciones', 'Predicciones'],
+            ...(f.analysis ? [['#analisis', 'Análisis IA']] : []),
             ['#cuotas', 'Cuotas'],
             ['#movimiento', 'Movimiento'],
             ['#forma', 'Forma y H2H'],
@@ -137,6 +138,19 @@ export default async function MatchPage({ params }: { params: Params }) {
           </div>
         )}
       </Section>
+
+      {f.analysis && (
+        <Section title="Análisis redactado" id="analisis">
+          <article className="card p-5">
+            {f.analysis.content.split(/\n{2,}/).map((para, i) => (
+              <p key={i} className="mb-3 text-sm leading-relaxed last:mb-0">{para}</p>
+            ))}
+            <p className="mt-4 text-[11px] text-muted">
+              Texto generado por IA ({f.analysis.model} vía Groq) a partir de las probabilidades del modelo y los datos de esta página. No añade información nueva ni garantiza el resultado.
+            </p>
+          </article>
+        </Section>
+      )}
 
       <Section title="Comparador de cuotas" id="cuotas">
         {!oddsRes.ok ? (

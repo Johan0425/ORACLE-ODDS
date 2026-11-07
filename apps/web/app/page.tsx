@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { apiGet, type FixtureList, type LiveFixture, type TrackRecord, type ValueBetList } from '@/lib/api';
+import { apiGet, type FixtureList, type LiveFixture, type TrackRecord, type ValueBetList, type WeekPicks } from '@/lib/api';
 import { dataStatus, sponsorConfig } from '@/lib/server-data';
-import { pct, units } from '@/lib/format';
+import { formatKickoff, pct, units } from '@/lib/format';
+import { TeamLogo } from '@/components/ui/TeamLogo';
 import { COMPLIANCE } from '@/lib/compliance';
 import { Section } from '@/components/layout/PageHeader';
 import { DataStatusIndicator } from '@/components/compliance/DataStatusIndicator';
@@ -16,20 +17,28 @@ import { IS_DEMO } from '@/components/compliance/DemoBanner';
 export const revalidate = 30;
 
 const STEPS = [
-  { title: 'Datos reales', text: 'Sincronizamos partidos, resultados y cuotas de proveedores con licencia de datos. Sin datos inventados: si una fuente falla, lo decimos.' },
+  { title: 'Datos reales', text: 'Sincronizamos partidos, resultados, clasificaciones e histórico de más de 20 ligas varias veces al día. Sin datos inventados: si una fuente falla, lo decimos.' },
   { title: 'Modelo calibrado', text: 'Un ensemble estadístico (Dixon-Coles, Elo y consenso de mercado sin margen) estima probabilidades y su incertidumbre, evaluado fuera de muestra.' },
   { title: 'Valor, no favoritos', text: 'Comparamos la probabilidad con la mejor cuota autorizada. Una selección del 80% puede no tener valor si la cuota no compensa el riesgo.' },
 ];
 
 export default async function HomePage() {
-  const [status, live, vbs, today, track, sponsor] = await Promise.all([
+  const [status, live, vbs, today, track, sponsor, week, lastWeek] = await Promise.all([
     dataStatus(),
     apiGet<LiveFixture[]>('/fixtures/live', { revalidate: 15 }),
     apiGet<ValueBetList>('/value-bets?limit=3', { revalidate: 60 }),
     apiGet<FixtureList>('/fixtures?date=today&limit=12', { revalidate: 60 }),
     apiGet<TrackRecord>('/track-record?limit=1', { revalidate: 300 }),
     sponsorConfig('hero_secondary'),
+    apiGet<WeekPicks>('/picks/week?offset=0', { revalidate: 120 }),
+    apiGet<WeekPicks>('/picks/week?offset=-1', { revalidate: 600 }),
   ]);
+  const featured = week.ok
+    ? week.data.items
+        .filter((i) => i.featured && i.status === 'SCHEDULED')
+        .slice(0, 6)
+    : [];
+  const lw = lastWeek.ok ? lastWeek.data.summary.featured : null;
 
   return (
     <>
@@ -41,8 +50,9 @@ export default async function HomePage() {
         </h1>
         <p className="mt-4 max-w-2xl text-muted">{COMPLIANCE.disclaimer} No recibimos apuestas ni custodiamos dinero.</p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <Link href="/best-bets" className="btn-primary">Ver mejores oportunidades</Link>
-          <Link href="/matches" className="btn-ghost">Calendario</Link>
+          <Link href="/pronosticos" className="btn-primary">Pronósticos de la semana</Link>
+          <Link href="/best-bets" className="btn-ghost">Oportunidades</Link>
+          <Link href="/leagues" className="btn-ghost">Ligas</Link>
           <DataStatusIndicator status={status} />
         </div>
       </section>
@@ -68,6 +78,40 @@ export default async function HomePage() {
           </div>
         </Section>
       )}
+
+      <Section
+        title="Pronósticos destacados"
+        id="picks"
+        action={<Link href="/pronosticos" className="text-sm text-gold hover:underline">Todos los de la semana</Link>}
+      >
+        {lw && lw.settled > 0 && (
+          <p className="mb-4 text-sm text-muted">
+            Semana pasada: <span className="tabular font-semibold text-foreground">{lw.won}/{lw.settled}</span> destacados acertados ({Math.round((lw.won / lw.settled) * 100)} %).{' '}
+            <Link href="/pronosticos?semana=-1" className="text-gold hover:underline">Ver detalle</Link>
+          </p>
+        )}
+        {featured.length === 0 ? (
+          <EmptyState title="Sin pronósticos destacados pendientes esta semana">
+            <p>Destacamos solo selecciones con probabilidad estimada de al menos 55 %. <Link href="/pronosticos?semana=1" className="underline">Ver la próxima semana</Link>.</p>
+          </EmptyState>
+        ) : (
+          <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {featured.map((i) => (
+              <li key={i.id}>
+                <Link href={`/matches/${i.id}`} className="card block p-4 hover:border-gold/40">
+                  <p className="text-xs text-muted">{i.league.name} · {formatKickoff(i.kickoff, { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="mt-2 flex items-center gap-2 text-sm"><TeamLogo name={i.homeTeam.name} src={i.homeTeam.logoUrl} size={18} />{i.homeTeam.name}</p>
+                  <p className="mt-1 flex items-center gap-2 text-sm"><TeamLogo name={i.awayTeam.name} src={i.awayTeam.logoUrl} size={18} />{i.awayTeam.name}</p>
+                  <p className="mt-3 flex items-center justify-between text-sm">
+                    <span className="text-gold-soft">★ {i.featured!.marketKey === '1X2' ? (i.featured!.selectionKey === 'HOME' ? `Gana ${i.homeTeam.name}` : i.featured!.selectionKey === 'AWAY' ? `Gana ${i.awayTeam.name}` : 'Empate') : i.featured!.marketKey === 'OU_GOALS' ? `${i.featured!.selectionKey === 'OVER' ? 'Más' : 'Menos'} de ${i.featured!.line} goles` : i.featured!.selectionKey === 'YES' ? 'Ambos marcan' : 'No marcan ambos'}</span>
+                    <span className="tabular font-bold">{pct(i.featured!.probability, 0)}</span>
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
 
       <Section title="Mejores oportunidades" id="best" action={<Link href="/best-bets" className="text-sm text-gold hover:underline">Ver todas</Link>}>
         {!vbs.ok ? (

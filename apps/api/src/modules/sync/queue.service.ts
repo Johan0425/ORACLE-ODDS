@@ -33,6 +33,10 @@ const JOB_QUEUE: Record<JobName, QueueKey> = {
   'compute:value-bets': 'compute',
   'compute:model-metrics': 'compute',
   'export:social-card': 'compute',
+  'sync:espn-history': 'sync',
+  'sync:espn-fixtures': 'sync',
+  'sync:espn-live': 'live',
+  'compute:ai-analysis': 'compute',
 };
 
 export const DEFAULT_JOB_OPTIONS: JobsOptions = {
@@ -91,11 +95,15 @@ export class QueueService implements OnModuleDestroy {
       ['sync:settlements', e.SYNC_RESULTS_EVERY_MS],
       ['compute:predictions', e.COMPUTE_PREDICTIONS_EVERY_MS],
       ['compute:value-bets', e.COMPUTE_VALUE_BETS_EVERY_MS],
+      ['sync:espn-fixtures', e.SYNC_UPCOMING_EVERY_MS],
+      ['sync:espn-live', 2 * 60_000],
+      ['compute:ai-analysis', 60 * 60_000],
     ];
     const cron: Array<[JobName, string]> = [
       ['sync:historical-fixtures', e.SYNC_HISTORICAL_CRON],
       ['compute:model-metrics', e.COMPUTE_METRICS_CRON],
       ['export:social-card', '0 13 * * *'],
+      ['sync:espn-history', '0 4 * * *'],
     ];
     for (const [name, ms] of every) {
       await this.queue(JOB_QUEUE[name]).upsertJobScheduler(name, { every: ms }, { name, data: {}, opts: DEFAULT_JOB_OPTIONS });
