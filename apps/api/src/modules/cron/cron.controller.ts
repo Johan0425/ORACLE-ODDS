@@ -52,8 +52,16 @@ export class CronController {
     const jobs = CRON_GROUPS[group];
     if (!jobs) throw new NotFoundException(`Grupo desconocido: ${group}`);
     const started = Date.now();
-    const results: Array<{ job: JobName | 'demo:advance'; status: string; reason?: string; ms: number }> = [];
+    const results: Array<{ job: JobName | 'demo:advance' | 'demo:purge'; status: string; reason?: string; ms: number }> = [];
     const pending: JobName[] = [];
+    if (!this.env.DEMO_MODE) {
+      const t = Date.now();
+      const purged = await this.demo.purgeLeftovers().catch((e: Error) => {
+        results.push({ job: 'demo:purge', status: 'FAILED', reason: e.message.slice(0, 200), ms: Date.now() - t });
+        return 0;
+      });
+      if (purged > 0) results.push({ job: 'demo:purge', status: 'SUCCEEDED', reason: `${purged} partidos ficticios eliminados`, ms: Date.now() - t });
+    }
     if (this.env.DEMO_MODE && (group === 'daily' || group === 'odds')) {
       // Demo: avanza partidos ficticios y refresca sus cuotas antes de recalcular.
       const t = Date.now();

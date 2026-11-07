@@ -235,6 +235,20 @@ export class DemoService {
   /** Elimina todo lo generado por el demo (proveedor DEMO y casas demo-*). No toca datos reales. */
   async purge(): Promise<number> {
     this.assertEnabled();
+    return this.deleteDemoData();
+  }
+
+  /**
+   * Con DEMO_MODE apagado, limpia los restos del demo para que nunca se mezclen
+   * con datos reales (historial del modelo, listados). No hace nada si no hay.
+   */
+  async purgeLeftovers(): Promise<number> {
+    if (this.env.DEMO_MODE) return 0;
+    const any = await this.prisma.fixture.count({ where: { primaryProvider: 'DEMO' } });
+    return any > 0 ? this.deleteDemoData() : 0;
+  }
+
+  private async deleteDemoData(): Promise<number> {
     const fixtures = (await this.prisma.fixture.findMany({ where: { primaryProvider: 'DEMO' }, select: { id: true } })).map((f) => f.id);
     const runs = (await this.prisma.predictionRun.findMany({ where: { fixtureId: { in: fixtures } }, select: { id: true } })).map((r) => r.id);
     const where = { fixtureId: { in: fixtures } };
